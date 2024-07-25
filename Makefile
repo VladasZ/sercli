@@ -1,4 +1,10 @@
 
+test:
+	cargo test --all
+	echo Test: OK
+	cargo test --all --release
+	echo Test release: OK
+
 lint:
 	cargo clippy \
       -- \
@@ -10,3 +16,5 @@ lint:
       \
       -D warnings
 
+fmt:
+	cargo +nightly fmt --all

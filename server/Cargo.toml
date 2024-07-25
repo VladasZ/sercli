@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name = "server"
+version = "0.1.0"
+
+[[bin]]
+name = "server"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+name = "server"
+
+[dependencies]

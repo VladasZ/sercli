@@ -1,6 +1,11 @@
 [package]
+authors = ["Vladas Zakrevksis <146100@gmail.com>"]
+description = "Server client interactions"
 edition = "2021"
+homepage = "https://github.com/VladasZ/sercli"
+license = "MIT OR Apache-2.0"
 name = "sercli"
+repository = "https://github.com/VladasZ/sercli"
 version = "0.1.0"
 
 [lib]
@@ -8,3 +13,8 @@ crate-type = ["rlib", "staticlib"]
 name = "sercli"
 
 [dependencies]
+anyhow = { workspace = true }
+log = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
