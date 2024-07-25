@@ -1,0 +1,10 @@
+[package]
+edition = "2021"
+name = "sercli"
+version = "0.1.0"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+name = "sercli"
+
+[dependencies]

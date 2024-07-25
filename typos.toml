@@ -1,0 +1,8 @@
+[files]
+extend-exclude = ["*.pbxproj", "profile.json"]
+
+[default.extend-words]
+# LOD - level of detail
+lod = "lod"
+# FULL HD
+hd = "hd"

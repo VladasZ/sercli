@@ -1,0 +1,12 @@
+[workspace]
+default-members = ["sercli"]
+members = [
+  "sercli",
+]
+
+resolver = "2"
+
+[workspace.metadata.cargo-machete]
+ignored = []
+
+[workspace.dependencies]
