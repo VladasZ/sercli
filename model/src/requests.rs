@@ -1,4 +1,4 @@
-use sercli::Request;
+use sercli::client::Request;
 
 use crate::User;
 

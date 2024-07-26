@@ -6,7 +6,7 @@ use reqwest::Client;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{from_str, to_string};
 
-use crate::{Method, Response, API};
+use crate::client::{Method, Response, API};
 
 pub struct Request<In: Serialize, Out: DeserializeOwned> {
     pub name: &'static str,

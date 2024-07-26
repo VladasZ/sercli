@@ -1,7 +1,7 @@
 use anyhow::Result;
 use model::{User, REGISTER};
 use reflected::Reflected;
-use sercli::API;
+use sercli::client::API;
 
 #[tokio::main]
 async fn main() -> Result<()> {
