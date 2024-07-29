@@ -11,3 +11,6 @@ crate-type = ["rlib", "staticlib"]
 name = "server"
 
 [dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+sercli = { workspace = true }
