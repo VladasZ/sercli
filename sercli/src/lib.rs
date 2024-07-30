@@ -15,12 +15,10 @@ async fn start_server_async() -> Result<()> {
 }
 
 pub fn start_server() -> JoinHandle<Result<()>> {
-    let handle = if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+    if let Ok(runtime) = tokio::runtime::Handle::try_current() {
         runtime.spawn(start_server_async())
     } else {
         let runtime = tokio::runtime::Runtime::new().unwrap();
         runtime.spawn(start_server_async())
-    };
-
-    handle
+    }
 }

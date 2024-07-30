@@ -12,7 +12,12 @@ lint:
       -W clippy::all \
       -W clippy::pedantic \
       \
-#      -A clippy::missing_panics_doc \
+      -A clippy::missing_panics_doc \
+      -A clippy::must_use_candidate \
+      -A clippy::missing_errors_doc \
+      -A clippy::module_name_repetitions \
+      -A clippy::implicit_hasher \
+      -A clippy::needless_pass_by_value \
       \
       -D warnings
 

@@ -102,7 +102,7 @@ pub async fn raw_request(
     request = request.header("content-type", "application/json");
 
     for (key, value) in headers {
-        request = request.header(key, value)
+        request = request.header(key, value);
     }
 
     let request = match &body {

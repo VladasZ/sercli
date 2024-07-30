@@ -17,7 +17,7 @@ impl API {
         STATIC_API
             .set(Self {
                 base_url: format!("{base_url}"),
-                headers:  Default::default(),
+                headers:  Mutex::default(),
             })
             .unwrap();
     }
