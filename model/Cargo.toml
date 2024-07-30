@@ -11,3 +11,8 @@ name = "model"
 reflected = { workspace = true }
 sercli = { workspace = true }
 serde = { workspace = true }
+
+[build-dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true }
+sercli = { workspace = true }

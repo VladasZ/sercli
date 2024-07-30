@@ -5,6 +5,8 @@ use crate::db::prepare_db;
 
 pub mod client;
 pub mod db;
+pub mod server;
+mod utils;
 
 async fn start_server_async() -> Result<()> {
     prepare_db().await?;
