@@ -8,12 +8,12 @@ use serde_json::{from_str, to_string};
 
 use crate::client::{Method, Response, API};
 
-pub struct Request<In: Serialize, Out: DeserializeOwned> {
+pub struct Request<In: Serialize + DeserializeOwned, Out: DeserializeOwned> {
     pub name: &'static str,
     _p:       PhantomData<fn(In) -> Out>,
 }
 
-impl<In: Serialize, Out: DeserializeOwned> Request<In, Out> {
+impl<In: Serialize + DeserializeOwned, Out: DeserializeOwned> Request<In, Out> {
     pub const fn new(name: &'static str) -> Self {
         Self {
             name,
@@ -24,9 +24,13 @@ impl<In: Serialize, Out: DeserializeOwned> Request<In, Out> {
     fn full_url(&self) -> String {
         format!("{}/{}", API::base_url(), self.name)
     }
+
+    pub fn description(&self) -> String {
+        format!("{} {}->{}", self.name, type_name::<In>(), type_name::<Out>(),)
+    }
 }
 
-impl<Param: Serialize, Output: DeserializeOwned> Request<Param, Output> {
+impl<Param: Serialize + DeserializeOwned, Output: DeserializeOwned> Request<Param, Output> {
     pub async fn send(&self, param: impl Borrow<Param>) -> Result<Output> {
         let body = to_string(param.borrow())?;
         request_object(Method::Get, self.full_url(), &API::headers(), body.into()).await

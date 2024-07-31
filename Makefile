@@ -18,6 +18,8 @@ lint:
       -A clippy::module_name_repetitions \
       -A clippy::implicit_hasher \
       -A clippy::needless_pass_by_value \
+      -A clippy::return_self_not_must_use \
+      -A clippy::module_inception \
       \
       -D warnings
 

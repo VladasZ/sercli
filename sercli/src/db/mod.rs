@@ -27,7 +27,7 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     }
 }
 
-pub async fn prepare_db() -> Result<()> {
+pub async fn prepare_db() -> Result<PgPool> {
     Postgres::start_env()?;
 
     let pool = open_pool_when_available(&Postgres::connection_string()?).await?;
@@ -41,5 +41,5 @@ pub async fn prepare_db() -> Result<()> {
 
     dbg!("Migrations: OK");
 
-    Ok(())
+    Ok(pool)
 }

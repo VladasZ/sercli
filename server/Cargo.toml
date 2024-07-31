@@ -12,5 +12,9 @@ name = "server"
 
 [dependencies]
 anyhow = { workspace = true }
+axum = { workspace = true }
 sercli = { workspace = true }
+sqlx = { workspace = true }
 tokio = { workspace = true }
+
+model = { workspace = true }
