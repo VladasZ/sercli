@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{env::set_var, path::PathBuf, time::Duration};
 
 use anyhow::{bail, Result};
 use sqlx::{migrate::Migrator, postgres::PgPoolOptions, PgPool};
@@ -28,6 +28,8 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
+    println!("cargo:rerun-if-changed=build.rs");
+
     Postgres::start_env()?;
 
     let pool = open_pool_when_available(&Postgres::connection_string()?).await?;
@@ -38,6 +40,8 @@ pub async fn prepare_db() -> Result<PgPool> {
     let migrator = Migrator::new(PathBuf::from(format!("{root}/model/migrations"))).await?;
 
     migrator.run(&pool).await?;
+
+    unsafe { set_var("DATABASE_URL", Postgres::connection_string()?) };
 
     dbg!("Migrations: OK");
 

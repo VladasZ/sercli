@@ -18,3 +18,8 @@ sqlx = { workspace = true }
 tokio = { workspace = true }
 
 model = { workspace = true }
+
+[build-dependencies]
+anyhow = { workspace = true }
+sercli = { workspace = true }
+tokio = { workspace = true }
