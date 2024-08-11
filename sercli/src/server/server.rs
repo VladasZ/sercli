@@ -1,5 +1,6 @@
 use std::future::Future;
 
+use anyhow::Result;
 use axum::{extract::State, routing::get, Json, Router};
 use serde::{de::DeserializeOwned, Serialize};
 use sqlx::PgPool;
@@ -30,11 +31,9 @@ impl Server {
         self
     }
 
-    pub async fn start(self) -> anyhow::Result<()> {
-        let listener = TcpListener::bind("127.0.0.1:8000").await.unwrap();
-        axum::serve(listener, self.router.with_state(prepare_db().await?))
-            .await
-            .unwrap();
+    pub async fn start(self) -> Result<()> {
+        let listener = TcpListener::bind("0.0.0.0:8000").await?;
+        axum::serve(listener, self.router.with_state(prepare_db().await?)).await?;
 
         Ok(())
     }

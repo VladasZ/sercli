@@ -21,3 +21,16 @@ pub async fn handle_register(pool: State<PgPool>, user: Json<User>) -> Result<Js
 
     Ok(Json(user))
 }
+
+pub async fn handle_get_users(pool: State<PgPool>, _: Json<()>) -> Result<Json<Vec<User>>, AppError> {
+    let users = sqlx::query_as!(
+        User,
+        r#"
+        SELECT * FROM users
+        "#,
+    )
+    .fetch_all(pool.deref())
+    .await?;
+
+    Ok(Json(users))
+}
