@@ -4,7 +4,7 @@ use anyhow::Result;
 use axum::{extract::State, routing::get, Json, Router};
 use serde::{de::DeserializeOwned, Serialize};
 use sqlx::PgPool;
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, runtime::Runtime, spawn};
 
 use crate::{client::Request, db::prepare_db, server::AppError};
 
@@ -31,7 +31,21 @@ impl Server {
         self
     }
 
-    pub async fn start(self) -> Result<()> {
+    pub fn start(self) -> Result<()> {
+        let runtime = Runtime::new()?;
+        runtime.block_on(async { self.start_internal().await })?;
+        Ok(())
+    }
+
+    pub fn spawn(self) -> Result<()> {
+        spawn(async {
+            self.start_internal().await.expect("Failed to spawn server");
+        });
+
+        Ok(())
+    }
+
+    async fn start_internal(self) -> Result<()> {
         let listener = TcpListener::bind("0.0.0.0:8000").await?;
         axum::serve(listener, self.router.with_state(prepare_db().await?)).await?;
 
