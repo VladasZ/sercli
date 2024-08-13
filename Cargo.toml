@@ -21,4 +21,6 @@ tokio = { version = "1.39", features = ["macros", "rt-multi-thread"] }
 tain = { path = "../tain/tain" }
 
 model = { path = "model" }
+server = { path = "server" }
+
 sercli = { path = "sercli" }

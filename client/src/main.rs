@@ -1,19 +1,24 @@
 use anyhow::Result;
-use model::{User, REGISTER};
-use reflected::Reflected;
+use model::GET_USERS;
 use sercli::client::API;
+use server::make_server;
+use tokio::sync::oneshot::channel;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    API::init("http://localhost");
+    let (se, rc) = channel();
 
-    let user = User::random();
+    make_server().spawn(se.into())?;
 
-    dbg!(&user);
+    let handle = rc.await?;
 
-    let user = REGISTER.send(user).await?;
+    dbg!(&handle);
 
-    dbg!(&user);
+    API::init("http://localhost:8000");
+
+    let users = GET_USERS.send(()).await?;
+
+    dbg!(&users);
 
     Ok(())
 }

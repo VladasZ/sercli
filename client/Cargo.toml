@@ -9,6 +9,7 @@ name = "client"
 [dependencies]
 anyhow = { workspace = true }
 model = { workspace = true }
-reflected = { workspace = true }
 sercli = { workspace = true }
 tokio = { workspace = true }
+
+server = { workspace = true }
