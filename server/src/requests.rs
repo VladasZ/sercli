@@ -1,11 +1,15 @@
 use std::ops::Deref;
 
-use axum::{extract::State, Json};
+use axum::{extract::State, http::HeaderMap, Json};
 use model::User;
 use sercli::server::AppError;
 use sqlx::PgPool;
 
-pub async fn handle_register(pool: State<PgPool>, user: Json<User>) -> Result<Json<User>, AppError> {
+pub async fn handle_register(
+    _: HeaderMap,
+    pool: State<PgPool>,
+    user: Json<User>,
+) -> Result<Json<User>, AppError> {
     let user = sqlx::query_as!(
         User,
         r#"
@@ -22,7 +26,11 @@ pub async fn handle_register(pool: State<PgPool>, user: Json<User>) -> Result<Js
     Ok(Json(user))
 }
 
-pub async fn handle_get_users(pool: State<PgPool>, _: Json<()>) -> Result<Json<Vec<User>>, AppError> {
+pub async fn handle_get_users(
+    _: HeaderMap,
+    pool: State<PgPool>,
+    _: Json<()>,
+) -> Result<Json<Vec<User>>, AppError> {
     let users = sqlx::query_as!(
         User,
         r#"

@@ -1,7 +1,7 @@
 use std::future::Future;
 
 use anyhow::Result;
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{extract::State, http::HeaderMap, routing::get, Json, Router};
 use serde::{de::DeserializeOwned, Serialize};
 use sqlx::PgPool;
 use tokio::{net::TcpListener, runtime::Runtime, spawn, sync::oneshot::Sender};
@@ -29,7 +29,7 @@ impl Server {
     >(
         mut self,
         request: &'static Request<In, Out>,
-        method: fn(State<PgPool>, Json<In>) -> F,
+        method: fn(HeaderMap, State<PgPool>, Json<In>) -> F,
     ) -> Self {
         self.router = self.router.route(&format!("/{}", request.name), get(method));
         self
