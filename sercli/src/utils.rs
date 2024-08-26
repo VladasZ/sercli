@@ -1,13 +1,11 @@
 use std::{path::PathBuf, process::Command};
-
-use log::warn;
+use anyhow::bail;
 
 pub(crate) fn git_root() -> anyhow::Result<PathBuf> {
     let output = Command::new("git").args(["rev-parse", "--show-toplevel"]).output()?;
 
     if !output.status.success() {
-        warn!("Failed to get Git repository root path");
-        return Ok(PathBuf::from("~/dev/money"));
+        bail!("Failed to get Git repository root path");
     }
 
     assert!(output.status.success(), "Failed to get Git repository root path");
