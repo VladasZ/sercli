@@ -1,5 +1,6 @@
 mod errors_handling;
 mod handle;
+mod header_map_utils;
 mod server;
 
 use axum::{
@@ -8,6 +9,7 @@ use axum::{
 };
 pub use errors_handling::*;
 pub use handle::*;
+pub use header_map_utils::*;
 pub use server::*;
 use tokio::task::JoinHandle;
 

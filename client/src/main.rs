@@ -1,5 +1,5 @@
 use anyhow::Result;
-use model::{User, GET_USERS, NON_EXISTING_ENDPOINT, REGISTER};
+use model::GET_USERS;
 use sercli::client::API;
 use server::make_server;
 use tokio::sync::oneshot::channel;
@@ -23,52 +23,60 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_response_errors() -> Result<()> {
-    const USER_MAIL: &str = "user@gmail.com";
+#[cfg(test)]
+mod test {
+    use model::{User, GET_USERS, NON_EXISTING_ENDPOINT, REGISTER};
+    use sercli::client::API;
+    use server::make_server;
+    use tokio::sync::oneshot::channel;
 
-    let (se, rc) = channel();
+    #[tokio::test]
+    async fn test_response_errors() -> anyhow::Result<()> {
+        const USER_MAIL: &str = "user@gmail.com";
 
-    make_server().spawn(se.into())?;
+        let (se, rc) = channel();
 
-    let _handle = rc.await?;
+        make_server().spawn(se.into())?;
 
-    API::init("http://localhost:8000");
+        let _handle = rc.await?;
 
-    let error = NON_EXISTING_ENDPOINT
-        .send(())
-        .await
-        .expect_err("Non existing endpoint request should have failed");
+        API::init("http://localhost:8000");
 
-    assert_eq!(
-        format!("{error}"),
-        "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
-    );
+        let error = NON_EXISTING_ENDPOINT
+            .send(())
+            .await
+            .expect_err("Non existing endpoint request should have failed");
 
-    let users = GET_USERS.send(()).await?;
+        assert_eq!(
+            format!("{error}"),
+            "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
+        );
 
-    async fn register_peter() -> Result<()> {
-        REGISTER
-            .send(User {
-                id:    0,
-                email: USER_MAIL.to_string(),
-                age:   20,
-                name:  "Peter".to_string(),
-            })
-            .await?;
+        let users = GET_USERS.send(()).await?;
+
+        async fn register_peter() -> anyhow::Result<()> {
+            REGISTER
+                .send(User {
+                    id:    0,
+                    email: USER_MAIL.to_string(),
+                    age:   20,
+                    name:  "Peter".to_string(),
+                })
+                .await?;
+            Ok(())
+        }
+
+        if !users.into_iter().any(|user| user.email == USER_MAIL) {
+            register_peter().await?;
+        }
+
+        let error = register_peter().await.expect_err("Second register Peter should have failed");
+
+        assert_eq!(
+            format!("{error}"),
+            "Something went wrong: User with such email already exists."
+        );
+
         Ok(())
     }
-
-    if !users.into_iter().any(|user| user.email == USER_MAIL) {
-        register_peter().await?;
-    }
-
-    let error = register_peter().await.expect_err("Second register Peter should have failed");
-
-    assert_eq!(
-        format!("{error}"),
-        "Something went wrong: User with such email already exists."
-    );
-
-    Ok(())
 }
