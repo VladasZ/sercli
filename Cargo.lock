@@ -1631,6 +1631,7 @@ dependencies = [
  "anyhow",
  "axum",
  "log",
+ "reflected",
  "reqwest",
  "serde",
  "serde_json",
@@ -2071,7 +2072,9 @@ dependencies = [
 
 [[package]]
 name = "tain"
-version = "0.3.0"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "325046828ee5d89e0c2ed4657d4bc8daa86b6d5b7fb1209158638d20ebe3e79f"
 dependencies = [
  "anyhow",
  "dirs",

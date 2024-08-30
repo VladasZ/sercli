@@ -1,4 +1,5 @@
 use std::{path::PathBuf, process::Command};
+
 use anyhow::bail;
 
 pub(crate) fn git_root() -> anyhow::Result<PathBuf> {

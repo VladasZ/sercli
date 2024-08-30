@@ -66,12 +66,12 @@ async fn request_object<T>(
 where
     T: DeserializeOwned,
 {
-    let response = raw_request(method, url, headers, body).await?;
+    let response = raw_request(method, &url, headers, body).await?;
 
     if response.status == 404 {
-        Err(anyhow!("404 not found"))
+        Err(anyhow!("Endpoint {url} not found. 404."))
     } else if response.status != 200 {
-        Err(anyhow!("Object request failed: {response:?}"))
+        Err(anyhow!(response.body))
     } else {
         Ok(parse(&response.body)?)
     }

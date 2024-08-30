@@ -1,3 +1,4 @@
+mod errors_handling;
 mod handle;
 mod server;
 
@@ -5,6 +6,7 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
+pub use errors_handling::*;
 pub use handle::*;
 pub use server::*;
 use tokio::task::JoinHandle;

@@ -16,6 +16,7 @@ name = "sercli"
 anyhow = { workspace = true }
 axum = { workspace = true }
 log = { workspace = true }
+reflected = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
