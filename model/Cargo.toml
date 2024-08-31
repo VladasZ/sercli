@@ -11,6 +11,7 @@ name = "model"
 reflected = { workspace = true }
 sercli = { workspace = true }
 serde = { workspace = true }
+sqlx = { workspace = true }
 
 [build-dependencies]
 anyhow = { workspace = true }

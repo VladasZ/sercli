@@ -1,34 +1,34 @@
-use std::ops::Deref;
-
-use axum::{extract::State, http::HeaderMap, Json};
+use axum::{http::HeaderMap, Json};
 use model::User;
 use sercli::server::{AppError, ToResponse};
-use sqlx::PgPool;
+
+type AuthSession = sercli::AuthSession<User>;
 
 pub async fn handle_register(
     _: HeaderMap,
-    pool: State<PgPool>,
+    session: AuthSession,
     user: Json<User>,
 ) -> Result<Json<User>, AppError> {
     sqlx::query_as!(
         User,
         r#"
-        INSERT INTO users (email, age, name)
-        VALUES ($1, $2, $3)
+        INSERT INTO users (email, age, name, password)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
         "#,
         user.email,
         user.age,
-        user.name
+        user.name,
+        user.password,
     )
-    .fetch_one(pool.deref())
+    .fetch_one(&session.backend.pg_pool)
     .await
     .to_response()
 }
 
 pub async fn handle_get_users(
     _: HeaderMap,
-    pool: State<PgPool>,
+    session: AuthSession,
     _: Json<()>,
 ) -> Result<Json<Vec<User>>, AppError> {
     let users = sqlx::query_as!(
@@ -37,7 +37,7 @@ pub async fn handle_get_users(
         SELECT * FROM users
         "#,
     )
-    .fetch_all(pool.deref())
+    .fetch_all(&session.backend.pg_pool)
     .await?;
 
     Ok(Json(users))

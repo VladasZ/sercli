@@ -1,15 +1,21 @@
+mod backend;
 mod errors_handling;
 mod handle;
 mod header_map_utils;
 mod server;
 
+use std::fmt::{Debug, Display, Formatter};
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
+pub use axum_login::AuthUser;
+pub use backend::*;
 pub use errors_handling::*;
 pub use handle::*;
 pub use header_map_utils::*;
+use password_auth::VerifyError;
 pub use server::*;
 use tokio::task::JoinHandle;
 
@@ -31,7 +37,16 @@ pub fn start_server() -> JoinHandle<anyhow::Result<()>> {
 }
 
 // Make our own error that wraps `anyhow::Error`.
+#[derive(Debug)]
 pub struct AppError(anyhow::Error);
+
+impl Display for AppError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self}")
+    }
+}
+
+impl std::error::Error for AppError {}
 
 // Tell axum how to convert `AppError` into a response.
 impl IntoResponse for AppError {
@@ -44,10 +59,20 @@ impl IntoResponse for AppError {
     }
 }
 
-impl<E> From<E> for AppError
-where E: Into<anyhow::Error>
-{
-    fn from(err: E) -> Self {
+impl From<anyhow::Error> for AppError {
+    fn from(err: anyhow::Error) -> Self {
         Self(err.into())
+    }
+}
+
+impl From<sqlx::Error> for AppError {
+    fn from(value: sqlx::Error) -> Self {
+        Self(value.into())
+    }
+}
+
+impl From<VerifyError> for AppError {
+    fn from(value: VerifyError) -> Self {
+        Self(value.into())
     }
 }

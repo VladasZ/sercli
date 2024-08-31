@@ -1,5 +1,5 @@
 use anyhow::Result;
-use model::GET_USERS;
+use model::{User, GET_USERS};
 use sercli::client::API;
 use server::make_server;
 use tokio::sync::oneshot::channel;
@@ -8,7 +8,7 @@ use tokio::sync::oneshot::channel;
 async fn main() -> Result<()> {
     let (se, rc) = channel();
 
-    make_server().spawn(se.into())?;
+    make_server().spawn::<User>(se.into())?;
 
     let handle = rc.await?;
 
@@ -36,7 +36,7 @@ mod test {
 
         let (se, rc) = channel();
 
-        make_server().spawn(se.into())?;
+        make_server().spawn::<User>(se.into())?;
 
         let _handle = rc.await?;
 
@@ -57,10 +57,11 @@ mod test {
         async fn register_peter() -> anyhow::Result<()> {
             REGISTER
                 .send(User {
-                    id:    0,
-                    email: USER_MAIL.to_string(),
-                    age:   20,
-                    name:  "Peter".to_string(),
+                    id:       0,
+                    email:    USER_MAIL.to_string(),
+                    age:      20,
+                    name:     "Peter".to_string(),
+                    password: "prostaf".to_string(),
                 })
                 .await?;
             Ok(())
