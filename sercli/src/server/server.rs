@@ -18,12 +18,18 @@ use crate::{
 
 #[derive(Default)]
 pub struct Server {
-    router: Router<()>,
+    router: Router,
 }
 
 impl Server {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn edit_router(self, edit: impl FnOnce(Router) -> Router) -> Self {
+        Self {
+            router: edit(self.router),
+        }
     }
 
     pub fn add_request<
