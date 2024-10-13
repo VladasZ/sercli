@@ -1,3 +1,5 @@
+pub mod migration;
+
 use std::{env::set_var, path::PathBuf, time::Duration};
 
 use anyhow::{bail, Result};
