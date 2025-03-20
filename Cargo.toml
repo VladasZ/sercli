@@ -1,6 +1,6 @@
 [workspace]
 default-members = ["sercli"]
-members = ["sercli", "model", "server", "client"]
+members = ["sercli", "model", "server", "client", "tests"]
 
 resolver = "2"
 
