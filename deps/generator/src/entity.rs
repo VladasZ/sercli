@@ -39,7 +39,7 @@ impl Entity {
 
         format!(
             r"
-#[derive(Debug, Default, PartialEq, reflected::Reflected)]
+#[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize, reflected::Reflected, sqlx::FromRow)]
 pub struct {name} {{
 {fields}}}
 "

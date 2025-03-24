@@ -35,7 +35,7 @@ fn get_type(ty: &DataType) -> &'static str {
             };
 
             if ident.value == "SERIAL" {
-                return "usize";
+                return "i64";
             } else {
                 panic!("Unsipported ident value: {ident}");
             }

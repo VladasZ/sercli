@@ -1,17 +1,6 @@
-use reflected::Reflected;
 use sercli::{SercliUser, server::AuthUser};
-use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, FromRow, Reflected)]
-pub struct User {
-    #[serde(default)]
-    pub id:       i32,
-    pub email:    String,
-    pub age:      i16,
-    pub name:     String,
-    pub password: String,
-}
+use crate::entities::User;
 
 impl SercliUser for User {
     fn password(&self) -> &str {
@@ -28,7 +17,7 @@ impl SercliUser for User {
 }
 
 impl AuthUser for User {
-    type Id = i32;
+    type Id = i64;
 
     fn id(&self) -> Self::Id {
         self.id

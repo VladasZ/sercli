@@ -9,7 +9,7 @@ use sqlparser::{
 };
 use utils::git_root;
 
-use crate::{entity::Entity, field::Field};
+use crate::entity::Entity;
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
@@ -94,50 +94,54 @@ fn get_sql() -> Result<impl Iterator<Item = String>> {
     Ok(result.into_iter())
 }
 
-#[test]
-fn entities() -> Result<()> {
-    let migrations = Migrations::get()?;
+#[cfg(test)]
+mod test {
+    use crate::{entity::Entity, field::Field, migrations::Migrations};
 
-    assert_eq!(
-        migrations.model,
-        [(
-            "User".into(),
-            Entity {
-                name:       "User".into(),
-                table_name: "users".into(),
-                fields:     vec![
-                    Field {
-                        name: "id".into(),
-                        ty:   "usize",
-                    },
-                    Field {
-                        name: "email".into(),
-                        ty:   "String",
-                    },
-                    Field {
-                        name: "age".into(),
-                        ty:   "i16",
-                    },
-                    Field {
-                        name: "name".into(),
-                        ty:   "String",
-                    },
-                    Field {
-                        name: "password".into(),
-                        ty:   "String",
-                    }
-                ],
-            }
-        )]
-        .into_iter()
-        .collect()
-    );
+    #[test]
+    fn entities() -> anyhow::Result<()> {
+        let migrations = Migrations::get()?;
 
-    println!("{}", migrations.model.get("User").unwrap().to_code());
+        assert_eq!(
+            migrations.model,
+            [(
+                "User".into(),
+                Entity {
+                    name:       "User".into(),
+                    table_name: "users".into(),
+                    fields:     vec![
+                        Field {
+                            name: "id".into(),
+                            ty:   "i64",
+                        },
+                        Field {
+                            name: "email".into(),
+                            ty:   "String",
+                        },
+                        Field {
+                            name: "age".into(),
+                            ty:   "i16",
+                        },
+                        Field {
+                            name: "name".into(),
+                            ty:   "String",
+                        },
+                        Field {
+                            name: "password".into(),
+                            ty:   "String",
+                        }
+                    ],
+                }
+            )]
+            .into_iter()
+            .collect()
+        );
 
-    assert_eq!(
-        migrations.model.get("User").unwrap().to_code(),
-        r"
+        println!("{}", migrations.model.get("User").unwrap().to_code());
+
+        assert_eq!(
+            migrations.model.get("User").unwrap().to_code(),
+            r"
 #[derive(Debug, PartialEq, Reflected)]
 pub struct User {
    pub id: usize,
@@ -147,22 +151,23 @@ pub struct User {
    pub password: String,
 }
 "
-    );
+        );
 
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn mod_code() -> Result<()> {
-    let migrations = Migrations::get()?;
+    #[test]
+    fn mod_code() -> anyhow::Result<()> {
+        let migrations = Migrations::get()?;
 
-    println!("{}", migrations.mod_code());
+        println!("{}", migrations.mod_code());
 
-    assert_eq!(
-        migrations.mod_code(),
-        r"mod user
+        assert_eq!(
+            migrations.mod_code(),
+            r"mod user
 pub use user::*"
-    );
+        );
 
-    Ok(())
+        Ok(())
+    }
 }
