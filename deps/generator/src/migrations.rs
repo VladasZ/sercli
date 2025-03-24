@@ -129,5 +129,21 @@ fn test() -> Result<()> {
         .collect()
     );
 
+    println!("{}", migrations.model.get("User").unwrap().to_code());
+
+    assert_eq!(
+        migrations.model.get("User").unwrap().to_code(),
+        r"
+#[derive(Debug, PartialEq, Reflected)]
+pub struct User {
+   pub id: usize,
+   pub email: String,
+   pub age: i16,
+   pub name: String,
+   pub password: String,
+}
+"
+    );
+
     Ok(())
 }

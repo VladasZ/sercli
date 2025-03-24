@@ -6,6 +6,12 @@ pub struct Field {
     pub ty:   &'static str,
 }
 
+impl Field {
+    pub fn to_code(&self) -> String {
+        format!("   pub {}: {},\n", self.name, self.ty)
+    }
+}
+
 impl From<ColumnDef> for Field {
     fn from(value: ColumnDef) -> Self {
         let ty = get_type(&value.data_type);
