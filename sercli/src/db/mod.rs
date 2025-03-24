@@ -27,11 +27,11 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     }
 }
 
+pub fn generate_model() -> Result<()> {
+    Generator::run()
+}
+
 pub async fn prepare_db() -> Result<PgPool> {
-    Generator::run()?;
-
-    println!("cargo:rerun-if-changed=build.rs");
-
     Postgres::start_env()?;
 
     let pool = open_pool_when_available(&Postgres::connection_string()?).await?;

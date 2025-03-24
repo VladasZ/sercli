@@ -31,7 +31,7 @@ impl<User: SercliUser> AuthnBackend for Backend<User> {
 
     async fn authenticate(&self, creds: Self::Credentials) -> Result<Option<Self::User>, Self::Error> {
         let user: Self::User = sqlx::query_as(&format!(
-            "select * from users where {} = ? ",
+            "SELECT * FROM users WHERE {} = ? ",
             User::login_field_name()
         ))
         .bind(creds.login())
