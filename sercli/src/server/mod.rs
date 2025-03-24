@@ -42,7 +42,7 @@ pub struct AppError(anyhow::Error);
 
 impl Display for AppError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self}")
+        write!(f, "{self:?}")
     }
 }
 
@@ -61,7 +61,7 @@ impl IntoResponse for AppError {
 
 impl From<anyhow::Error> for AppError {
     fn from(err: anyhow::Error) -> Self {
-        Self(err.into())
+        Self(err)
     }
 }
 

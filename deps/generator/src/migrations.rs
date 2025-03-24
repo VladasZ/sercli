@@ -35,7 +35,7 @@ impl Migrations {
     pub fn mod_code(&self) -> String {
         let mut code = String::new();
 
-        for (_key, entity) in &self.model {
+        for entity in self.model.values() {
             let mod_name = entity.name.to_snake_case();
 
             code.push_str(&format!(
@@ -48,7 +48,7 @@ pub use {mod_name}::*;"
     }
 
     fn process_migration(&mut self, sql: &str) -> Result<()> {
-        for statement in Parser::parse_sql(&DIALECT, &sql)? {
+        for statement in Parser::parse_sql(&DIALECT, sql)? {
             self.process_statement(statement)?;
         }
 

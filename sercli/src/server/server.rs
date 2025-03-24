@@ -104,6 +104,7 @@ impl Server {
     }
 }
 
+#[allow(clippy::unused_async)]
 async fn is_authenticated<User: SercliUser>(auth_session: AuthSession<Backend<User>>) -> bool {
     auth_session.user.is_some()
 }

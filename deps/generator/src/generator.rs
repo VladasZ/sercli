@@ -23,7 +23,7 @@ impl Generator {
 
         mod_file.write_all(migrations.mod_code().as_bytes())?;
 
-        for (_name, entity) in &migrations.model {
+        for entity in migrations.model.values() {
             entity.generate_file(&entities_dir)?;
         }
 

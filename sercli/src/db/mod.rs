@@ -1,8 +1,7 @@
-pub mod migration;
-
 use std::{env::set_var, path::PathBuf, time::Duration};
 
 use anyhow::{Result, bail};
+use generator::Generator;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tain::Postgres;
 use tokio::time::sleep;
@@ -29,17 +28,13 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
-    dbg!("Forgol??");
+    Generator::run()?;
 
     println!("cargo:rerun-if-changed=build.rs");
 
     Postgres::start_env()?;
 
-    dbg!("Forgol??");
-
     let pool = open_pool_when_available(&Postgres::connection_string()?).await?;
-
-    dbg!("Forgol??");
 
     let root = git_root()?;
     let root = root.to_string_lossy();
