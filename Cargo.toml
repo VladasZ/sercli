@@ -25,6 +25,7 @@ tokio = { version = "1.39", features = ["macros", "rt-multi-thread"] }
 
 tain = "0.4.0"
 
+utils = { path = "deps/utils" }
 generator = { path = "deps/generator" }
 
 model = { path = "model" }

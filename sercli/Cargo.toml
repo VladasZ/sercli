@@ -27,4 +27,5 @@ sqlx = { workspace = true }
 tain = { workspace = true }
 tokio = { workspace = true }
 
+utils = { workspace = true }
 generator = { workspace = true }

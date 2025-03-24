@@ -1,24 +1,26 @@
-use std::{collections::HashMap, fs::read_to_string, path::PathBuf, process::Command};
+use std::{collections::HashMap, fs::read_to_string};
 
 use anyhow::{Result, bail};
+use inflector::Inflector;
 use sqlparser::{
     ast::{CreateTable, Statement},
     dialect::PostgreSqlDialect,
     parser::Parser,
 };
+use utils::git_root;
 
 use crate::{entity::Entity, field::Field};
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
 pub struct Migrations {
-    model: HashMap<String, Entity>,
+    pub model: HashMap<String, Entity>,
 }
 
 impl Migrations {}
 
 impl Migrations {
-    pub fn new() -> Result<Self> {
+    pub fn get() -> Result<Self> {
         let mut migrations = Self {
             model: HashMap::default(),
         };
@@ -28,6 +30,21 @@ impl Migrations {
         }
 
         Ok(migrations)
+    }
+
+    pub fn mod_code(&self) -> String {
+        let mut code = String::new();
+
+        for (_key, entity) in &self.model {
+            let mod_name = entity.name.to_snake_case();
+
+            code.push_str(&format!(
+                r"mod {mod_name};
+pub use {mod_name}::*;"
+            ));
+        }
+
+        code
     }
 
     fn process_migration(&mut self, sql: &str) -> Result<()> {
@@ -77,22 +94,9 @@ fn get_sql() -> Result<impl Iterator<Item = String>> {
     Ok(result.into_iter())
 }
 
-fn git_root() -> Result<PathBuf> {
-    let output = Command::new("git").args(["rev-parse", "--show-toplevel"]).output()?;
-
-    if !output.status.success() {
-        bail!("Failed to get Git repository root path");
-    }
-
-    assert!(output.status.success(), "Failed to get Git repository root path");
-    let git_root = String::from_utf8_lossy(&output.stdout).trim_end_matches('\n').to_string();
-
-    Ok(PathBuf::from(git_root))
-}
-
 #[test]
-fn test() -> Result<()> {
-    let migrations = Migrations::new()?;
+fn entities() -> Result<()> {
+    let migrations = Migrations::get()?;
 
     assert_eq!(
         migrations.model,
@@ -143,6 +147,21 @@ pub struct User {
    pub password: String,
 }
 "
+    );
+
+    Ok(())
+}
+
+#[test]
+fn mod_code() -> Result<()> {
+    let migrations = Migrations::get()?;
+
+    println!("{}", migrations.mod_code());
+
+    assert_eq!(
+        migrations.mod_code(),
+        r"mod user
+pub use user::*"
     );
 
     Ok(())

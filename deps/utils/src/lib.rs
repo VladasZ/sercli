@@ -1,8 +1,8 @@
 use std::{path::PathBuf, process::Command};
 
-use anyhow::bail;
+use anyhow::{Result, bail};
 
-pub(crate) fn git_root() -> anyhow::Result<PathBuf> {
+pub fn git_root() -> Result<PathBuf> {
     let output = Command::new("git").args(["rev-parse", "--show-toplevel"]).output()?;
 
     if !output.status.success() {

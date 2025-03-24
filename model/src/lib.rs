@@ -1,3 +1,4 @@
+mod entities;
 mod requests;
 mod user;
 

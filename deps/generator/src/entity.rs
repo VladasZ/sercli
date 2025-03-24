@@ -1,3 +1,10 @@
+use std::{
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+};
+
+use anyhow::Result;
 use inflector::{Inflector, string::singularize::to_singular};
 use sqlparser::ast::CreateTable;
 
@@ -11,7 +18,17 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub fn to_code(&self) -> String {
+    pub fn generate_file(&self, folder: &Path) -> Result<()> {
+        let path = folder.join(self.file_name());
+
+        let mut file = File::create_new(&path)?;
+
+        file.write_all(self.to_code().as_bytes())?;
+
+        Ok(())
+    }
+
+    pub(crate) fn to_code(&self) -> String {
         let name = &self.name;
 
         let mut fields = String::new();
@@ -22,11 +39,15 @@ impl Entity {
 
         format!(
             r"
-#[derive(Debug, PartialEq, Reflected)]
+#[derive(Debug, Default, PartialEq, reflected::Reflected)]
 pub struct {name} {{
 {fields}}}
 "
         )
+    }
+
+    fn file_name(&self) -> PathBuf {
+        format!("{}.rs", self.name.to_snake_case()).into()
     }
 }
 

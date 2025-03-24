@@ -6,8 +6,7 @@ use anyhow::{Result, bail};
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tain::Postgres;
 use tokio::time::sleep;
-
-use crate::utils::git_root;
+use utils::git_root;
 
 async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     let mut pool: sqlx::Result<PgPool>;
