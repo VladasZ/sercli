@@ -6,7 +6,7 @@ use axum_login::{AuthnBackend, UserId};
 use password_auth::verify_password;
 use sqlx::PgPool;
 
-use crate::{db::prepare_db, server::AppError, SercliUser};
+use crate::{SercliUser, db::prepare_db, server::AppError};
 
 #[derive(Clone)]
 pub struct Backend<User> {

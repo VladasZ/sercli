@@ -1,0 +1,14 @@
+[package]
+edition = "2024"
+name = "generator"
+version = "0.1.0"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+name = "generator"
+
+[dependencies]
+Inflector = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+sqlparser = { workspace = true }

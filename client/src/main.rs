@@ -1,5 +1,5 @@
 use anyhow::Result;
-use model::{User, GET_USERS};
+use model::{GET_USERS, User};
 use sercli::client::API;
 use server::make_server;
 use tokio::sync::oneshot::channel;
@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod test {
-    use model::{User, GET_USERS, NON_EXISTING_ENDPOINT, REGISTER};
+    use model::{GET_USERS, NON_EXISTING_ENDPOINT, REGISTER, User};
     use sercli::client::API;
     use server::make_server;
     use tokio::sync::oneshot::channel;

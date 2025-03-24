@@ -1,4 +1,4 @@
-use axum::{http::HeaderMap, Json};
+use axum::{Json, http::HeaderMap};
 use model::User;
 use sercli::server::{AppError, ToResponse};
 

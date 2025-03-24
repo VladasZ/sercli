@@ -1,19 +1,18 @@
 use std::future::Future;
 
 use anyhow::Result;
-use axum::{http::HeaderMap, routing::get, Json, Router};
+use axum::{Json, Router, http::HeaderMap, routing::get};
 use axum_login::{
-    predicate_required,
+    AuthManagerLayerBuilder, AuthSession, predicate_required,
     tower_sessions::{MemoryStore, SessionManagerLayer},
-    AuthManagerLayerBuilder, AuthSession,
 };
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use tokio::{net::TcpListener, runtime::Runtime, spawn, sync::oneshot::Sender};
 
 use crate::{
-    client::Request,
-    server::{backend::Backend, AppError, ServerHandle},
     SercliUser,
+    client::Request,
+    server::{AppError, ServerHandle, backend::Backend},
 };
 
 #[derive(Default)]

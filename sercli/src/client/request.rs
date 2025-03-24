@@ -1,12 +1,12 @@
 use std::{any::type_name, borrow::Borrow, collections::HashMap, marker::PhantomData};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use log::{debug, error};
 use reqwest::Client;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use serde_json::{from_str, to_string};
 
-use crate::client::{Method, Response, API};
+use crate::client::{API, Method, Response};
 
 pub struct Request<In: Serialize + DeserializeOwned, Out: DeserializeOwned> {
     pub name: &'static str,

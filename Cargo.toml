@@ -8,21 +8,24 @@ resolver = "2"
 ignored = []
 
 [workspace.dependencies]
+Inflector = "0.11"
 anyhow = "1.0"
-axum = { version = "0.7.5" }
+async-trait = "0.1"
+axum = { version = "0.8" }
+axum-login = "0.17"
 log = "0.4"
-axum-login = "0.16"
+password-auth = "1.1.0-pre.1"
 reflected = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-async-trait = "0.1"
+sqlparser = "0.55"
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres"] }
 tokio = { version = "1.39", features = ["macros", "rt-multi-thread"] }
-password-auth = "1.1.0-pre.1"
-sqlparser = "0.51"
 
 tain = "0.4.0"
+
+generator = { path = "deps/generator" }
 
 model = { path = "model" }
 server = { path = "server" }

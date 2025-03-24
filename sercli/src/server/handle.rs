@@ -1,7 +1,7 @@
 use std::future::Future;
 
-use anyhow::{bail, Result};
-use tokio::sync::oneshot::{channel, Sender};
+use anyhow::{Result, bail};
+use tokio::sync::oneshot::{Sender, channel};
 
 #[derive(Debug)]
 pub struct ServerHandle {

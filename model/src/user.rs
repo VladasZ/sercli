@@ -1,5 +1,5 @@
 use reflected::Reflected;
-use sercli::{server::AuthUser, SercliUser};
+use sercli::{SercliUser, server::AuthUser};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
