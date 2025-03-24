@@ -7,7 +7,7 @@ use sqlparser::{
     parser::Parser,
 };
 
-use crate::entity::Entity;
+use crate::{entity::Entity, field::Field};
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
@@ -97,10 +97,32 @@ fn test() -> Result<()> {
     assert_eq!(
         migrations.model,
         [(
-            "User".to_string(),
+            "User".into(),
             Entity {
-                name:       "User".to_string(),
-                table_name: "users".to_string(),
+                name:       "User".into(),
+                table_name: "users".into(),
+                fields:     vec![
+                    Field {
+                        name: "id".into(),
+                        ty:   "usize",
+                    },
+                    Field {
+                        name: "email".into(),
+                        ty:   "String",
+                    },
+                    Field {
+                        name: "age".into(),
+                        ty:   "i16",
+                    },
+                    Field {
+                        name: "name".into(),
+                        ty:   "String",
+                    },
+                    Field {
+                        name: "password".into(),
+                        ty:   "String",
+                    }
+                ],
             }
         )]
         .into_iter()
