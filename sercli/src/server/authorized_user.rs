@@ -34,7 +34,8 @@ where
 
         let token = token.to_str()?;
 
-        let Some(user_id) = TOKEN_STORAGE.lock().await.get(token).copied() else {
+        let Some(user_id) = dbg!(TOKEN_STORAGE.lock().await).get(token).copied() else {
+            dbg!(&token);
             return Err(anyhow!("Invalid authorization token").into());
         };
 

@@ -32,12 +32,12 @@ mod test {
     use tokio::sync::oneshot::channel;
 
     #[tokio::test]
-    async fn test_response_errors() -> anyhow::Result<()> {
+    async fn test_response_errors() -> Result<()> {
         const USER_MAIL: &str = "user@gmail.com";
 
         let (se, rc) = channel();
 
-        make_server().spawn::<User>(se.into())?;
+        make_server().spawn(se.into())?;
 
         let _handle = rc.await?;
 
