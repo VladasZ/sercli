@@ -6,7 +6,7 @@ test:
 	echo Test release: OK
 
 lint:
-	cargo clippy \
+	cargo clippy --all \
       -- \
       \
       -W clippy::all \

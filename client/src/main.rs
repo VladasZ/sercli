@@ -1,5 +1,5 @@
 use anyhow::Result;
-use model::{GET_USERS, User};
+use model::GET_USERS;
 use sercli::client::API;
 use server::make_server;
 use tokio::sync::oneshot::channel;
@@ -8,7 +8,7 @@ use tokio::sync::oneshot::channel;
 async fn main() -> Result<()> {
     let (se, rc) = channel();
 
-    make_server().spawn::<User>(se.into())?;
+    make_server().spawn(se.into())?;
 
     let handle = rc.await?;
 

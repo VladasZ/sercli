@@ -77,21 +77,21 @@ impl Server {
         self
     }
 
-    pub fn start<User: SercliUser>(self) -> Result<()> {
+    pub fn start(self) -> Result<()> {
         let runtime = Runtime::new()?;
-        runtime.block_on(async { self.start_internal::<User>(None).await })?;
+        runtime.block_on(async { self.start_internal(None).await })?;
         Ok(())
     }
 
-    pub fn spawn<User: SercliUser>(self, started: Option<Sender<ServerHandle>>) -> Result<()> {
+    pub fn spawn(self, started: Option<Sender<ServerHandle>>) -> Result<()> {
         spawn(async {
-            self.start_internal::<User>(started).await.expect("Failed to spawn server");
+            self.start_internal(started).await.expect("Failed to spawn server");
         });
 
         Ok(())
     }
 
-    async fn start_internal<User: SercliUser>(self, started: Option<Sender<ServerHandle>>) -> Result<()> {
+    async fn start_internal(self, started: Option<Sender<ServerHandle>>) -> Result<()> {
         let listener = TcpListener::bind("0.0.0.0:8000").await?;
 
         let (handle, receiver) = ServerHandle::new();

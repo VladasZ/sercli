@@ -5,6 +5,7 @@ use sqlx::{FromRow, postgres::PgRow};
 pub trait Entity: Sized + Reflected + for<'r> FromRow<'r, PgRow> + Unpin {
     fn table_name() -> String;
     fn create_table_query() -> String;
+    fn insert_query() -> String;
 }
 
 impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
@@ -38,8 +39,25 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
 (
    id SERIAL PRIMARY KEY,
 {fields}
-);
-"
+);"
+        )
+    }
+
+    fn insert_query() -> String {
+        let columns: Vec<_> = T::fields().iter().map(|field| field.name.to_string()).collect();
+        let columns = columns.join(", ");
+
+        let placeholders = (1..=T::fields().len())
+            .map(|i| format!("${i}"))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        format!(
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING {};",
+            T::table_name(),
+            columns,
+            placeholders,
+            columns
         )
     }
 }
@@ -63,6 +81,13 @@ mod test {
     use sqlx::FromRow;
 
     use crate::Entity;
+
+    #[derive(Default, Reflected, FromRow)]
+    struct Cat {
+        age:    i32,
+        name:   String,
+        weight: f32,
+    }
 
     #[test]
     fn table_name() {
@@ -92,13 +117,30 @@ mod test {
 
         println!("{}", Empty::create_table_query());
 
-        #[derive(Default, Reflected, FromRow)]
-        struct Cat {
-            age:    i32,
-            name:   String,
-            weight: f32,
-        }
+        assert_eq!(
+            Empty::create_table_query(),
+            r"CREATE TABLE IF NOT EXISTS empties
+(
+   id SERIAL PRIMARY KEY
+);"
+        );
 
         println!("{}", Cat::create_table_query());
+
+        assert_eq!(
+            Cat::create_table_query(),
+            r"CREATE TABLE IF NOT EXISTS cats
+(
+   id SERIAL PRIMARY KEY,
+   age INTEGER NOT NULL,
+   name VARCHAR(255) NOT NULL,
+   weight REAL NOT NULL
+);"
+        );
+    }
+
+    #[test]
+    fn insert_query() {
+        println!("{}", Cat::insert_query());
     }
 }

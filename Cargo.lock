@@ -1517,21 +1517,22 @@ dependencies = [
 
 [[package]]
 name = "reflected"
-version = "0.10.2"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b24588302a2c85b03a5833853743820149010ebe1f93fb22f226a59ae53734"
+checksum = "be0ffe38a88b128ca9093c6382d37caf600e2fed6b9bdf91725df244723513a3"
 dependencies = [
  "chrono",
- "rand 0.8.5",
+ "fake",
  "reflected_proc",
  "rust_decimal",
+ "sqlx",
 ]
 
 [[package]]
 name = "reflected_proc"
-version = "0.10.2"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2048cd10fbe70e814fc8bb31c616b235d8396e76ff10be52b1495e1615cb99e3"
+checksum = "a194262bd664107e7b728c715cbf4b7a9888731b3b3f9cfb3d147c1c980742a8"
 dependencies = [
  "quote",
  "syn 1.0.109",

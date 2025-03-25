@@ -14,7 +14,7 @@ fake = "4.2"
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros"] }
 log = "0.4"
-reflected = "0.10"
+reflected = "0.11.1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -35,3 +35,4 @@ sercli = { path = "sercli" }
 
 [patch.crates-io]
 #tain = { path = "../tain/tain" }
+#reflected = { path = "../reflected/reflected" }
