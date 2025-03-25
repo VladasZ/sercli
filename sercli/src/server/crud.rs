@@ -5,20 +5,16 @@ use crate::Entity;
 
 #[allow(async_fn_in_trait)]
 pub trait Crud: Sized {
-    async fn get_all(pool: &PgPool) -> Result<Vec<Self>>;
     async fn create_table(pool: &PgPool) -> Result<()>;
     async fn drop_table(pool: &PgPool) -> Result<()>;
+
     async fn insert(self, pool: &PgPool) -> Result<Self>;
+    async fn get_all(pool: &PgPool) -> Result<Vec<Self>>;
+    async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 }
 
 impl<T: Entity> Crud for T {
-    async fn get_all(pool: &PgPool) -> Result<Vec<Self>> {
-        Ok(sqlx::query_as(&format!("SELECT * FROM {}", T::table_name()))
-            .fetch_all(pool)
-            .await?)
-    }
-
     async fn create_table(pool: &PgPool) -> Result<()> {
         pool.execute(&*T::create_table_query()).await?;
         Ok(())
@@ -35,6 +31,20 @@ impl<T: Entity> Crud for T {
         let query = self.bind_to_sqlx_query(query);
 
         Ok(query.fetch_one(pool).await?)
+    }
+
+    async fn get_all(pool: &PgPool) -> Result<Vec<Self>> {
+        Ok(sqlx::query_as(&format!("SELECT * FROM {}", T::table_name()))
+            .fetch_all(pool)
+            .await?)
+    }
+
+    async fn with_id(id: i32, pool: &PgPool) -> Result<Self> {
+        Ok(
+            sqlx::query_as(&format!("SELECT * FROM {} WHERE id = {id}", T::table_name()))
+                .fetch_one(pool)
+                .await?,
+        )
     }
 
     async fn delete(self, pool: &PgPool) -> Result<()> {
@@ -91,6 +101,8 @@ mod test {
         let all = VaccinatedDog::get_all(&pool).await?;
 
         assert_eq!(all.first().unwrap(), &dog);
+
+        assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
 
         dog.delete(&pool).await?;
 
