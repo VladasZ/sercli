@@ -9,7 +9,7 @@ use tokio::{net::TcpListener, runtime::Runtime, spawn, sync::oneshot::Sender};
 use crate::{
     SercliUser,
     client::Request,
-    server::{AppError, ServerHandle, authorized_user::AuthorizedUser, prepare_db},
+    server::{AppError, AuthorizeRequest, ServerHandle, authorized_user::AuthorizedUser, prepare_db},
 };
 
 #[derive(Default)]
@@ -41,6 +41,24 @@ impl Server {
         self
     }
 
+    pub fn add_authorize_request<
+        In: Serialize + DeserializeOwned + Send + 'static,
+        Out: Serialize + DeserializeOwned + Send + 'static,
+        F: Future<Output = Result<Json<Out>, AppError>> + Sized + Send + 'static,
+        User: SercliUser,
+        T: 'static,
+    >(
+        mut self,
+        request: &'static Request<In, Out>,
+        method: fn(AuthorizeRequest<User>, State<PgPool>, _: Json<In>) -> F,
+    ) -> Self
+    where
+        fn(AuthorizeRequest<User>, State<PgPool>, _: Json<In>) -> F: Handler<T, PgPool>,
+    {
+        self.router = self.router.route(&format!("/{}", request.name), get(method));
+        self
+    }
+
     pub fn add_authorized_request<
         In: Serialize + DeserializeOwned + Send + 'static,
         Out: Serialize + DeserializeOwned + Send + 'static,
@@ -50,10 +68,10 @@ impl Server {
     >(
         mut self,
         request: &'static Request<In, Out>,
-        method: fn(AuthorizedUser<User>, State<PgPool>, _: Json<()>) -> F,
+        method: fn(AuthorizedUser<User>, State<PgPool>, _: Json<In>) -> F,
     ) -> Self
     where
-        fn(AuthorizedUser<User>, State<PgPool>, _: Json<()>) -> F: Handler<T, PgPool>,
+        fn(AuthorizedUser<User>, State<PgPool>, _: Json<In>) -> F: Handler<T, PgPool>,
     {
         self.router = self.router.route(&format!("/{}", request.name), get(method));
         self
@@ -77,8 +95,6 @@ impl Server {
         let listener = TcpListener::bind("0.0.0.0:8000").await?;
 
         let (handle, receiver) = ServerHandle::new();
-
-        dbg!(&self.router);
 
         let server = axum::serve(
             listener,

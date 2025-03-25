@@ -10,6 +10,7 @@ ignored = []
 [workspace.dependencies]
 Inflector = "0.11"
 anyhow = "1.0"
+fake = "4.2"
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros"] }
 log = "0.4"

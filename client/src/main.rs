@@ -25,6 +25,7 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod test {
+    use anyhow::Result;
     use model::{GET_USERS, NON_EXISTING_ENDPOINT, REGISTER, User};
     use sercli::client::API;
     use server::make_server;
@@ -52,10 +53,8 @@ mod test {
             "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
         );
 
-        let users = GET_USERS.send(()).await?;
-
-        async fn register_peter() -> anyhow::Result<()> {
-            REGISTER
+        async fn register_peter() -> Result<String> {
+            let (token, _user) = REGISTER
                 .send(User {
                     id:       0,
                     email:    USER_MAIL.to_string(),
@@ -64,19 +63,24 @@ mod test {
                     password: "prostaf".to_string(),
                 })
                 .await?;
-            Ok(())
+            Ok(token)
         }
 
-        if !users.into_iter().any(|user| user.email == USER_MAIL) {
-            register_peter().await?;
-        }
+        let token = register_peter().await?;
+
+        API::add_header("token", token);
 
         let error = register_peter().await.expect_err("Second register Peter should have failed");
 
         assert_eq!(
             format!("{error}"),
-            "Something went wrong: User with such email already exists."
+            "Something went wrong: error returned from database: duplicate key value violates unique \
+             constraint \"users_email_key\""
         );
+
+        let users = GET_USERS.send(()).await?;
+
+        dbg!(&users);
 
         Ok(())
     }

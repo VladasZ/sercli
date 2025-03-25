@@ -1,10 +1,14 @@
 use axum::{Json, extract::State};
 use model::User;
-use sercli::server::{AppError, AuthorizedUser, ToResponse};
+use sercli::server::{AppError, AuthorizeRequest, AuthorizedUser};
 use sqlx::PgPool;
 
-pub async fn register(db: State<PgPool>, user: Json<User>) -> Result<Json<User>, AppError> {
-    sqlx::query_as!(
+pub async fn handle_register(
+    request: AuthorizeRequest<User>,
+    db: State<PgPool>,
+    user: Json<User>,
+) -> Result<Json<(String, User)>, AppError> {
+    let user: User = sqlx::query_as!(
         User,
         r#"
         INSERT INTO users (email, age, name, password)
@@ -17,8 +21,11 @@ pub async fn register(db: State<PgPool>, user: Json<User>) -> Result<Json<User>,
         user.password,
     )
     .fetch_one(&*db)
-    .await
-    .to_response()
+    .await?;
+
+    let token = request.generate_token(&user).await;
+
+    Ok(Json((token, user)))
 }
 
 pub async fn get_users(

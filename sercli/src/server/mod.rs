@@ -1,3 +1,4 @@
+mod authorize_request;
 mod authorized_user;
 mod errors_handling;
 mod handle;
@@ -5,6 +6,7 @@ mod server;
 
 use std::fmt::{Debug, Display, Formatter};
 
+pub use authorize_request::*;
 pub use authorized_user::*;
 use axum::{
     http::{StatusCode, header::ToStrError},

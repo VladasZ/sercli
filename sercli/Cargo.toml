@@ -16,6 +16,7 @@ name = "sercli"
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 axum = { workspace = true }
+fake = { workspace = true }
 log = { workspace = true }
 reflected = { workspace = true }
 reqwest = { workspace = true }
