@@ -16,9 +16,7 @@ name = "sercli"
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 axum = { workspace = true }
-axum-login = { workspace = true }
 log = { workspace = true }
-password-auth = { workspace = true }
 reflected = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
@@ -26,6 +24,7 @@ serde_json = { workspace = true }
 sqlx = { workspace = true }
 tain = { workspace = true }
 tokio = { workspace = true }
+derive_more = { workspace = true }
 
 utils = { workspace = true }
 generator = { workspace = true }

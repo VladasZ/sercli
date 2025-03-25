@@ -1,14 +1,9 @@
-use axum::{Json, http::HeaderMap};
+use axum::{Json, extract::State};
 use model::User;
-use sercli::server::{AppError, ToResponse};
+use sercli::server::{AppError, AuthorizedUser, ToResponse};
+use sqlx::PgPool;
 
-type AuthSession = sercli::AuthSession<User>;
-
-pub async fn handle_register(
-    _: HeaderMap,
-    session: AuthSession,
-    user: Json<User>,
-) -> Result<Json<User>, AppError> {
+pub async fn register(db: State<PgPool>, user: Json<User>) -> Result<Json<User>, AppError> {
     sqlx::query_as!(
         User,
         r#"
@@ -21,14 +16,14 @@ pub async fn handle_register(
         user.name,
         user.password,
     )
-    .fetch_one(&session.backend.pg_pool)
+    .fetch_one(&*db)
     .await
     .to_response()
 }
 
-pub async fn handle_get_users(
-    _: HeaderMap,
-    session: AuthSession,
+pub async fn get_users(
+    _user: AuthorizedUser<User>,
+    db: State<PgPool>,
     _: Json<()>,
 ) -> Result<Json<Vec<User>>, AppError> {
     let users = sqlx::query_as!(
@@ -37,7 +32,7 @@ pub async fn handle_get_users(
         SELECT * FROM users
         "#,
     )
-    .fetch_all(&session.backend.pg_pool)
+    .fetch_all(&*db)
     .await?;
 
     Ok(Json(users))

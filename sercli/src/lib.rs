@@ -5,7 +5,3 @@ mod user;
 
 pub use axum::{Json, extract::State, http::HeaderMap};
 pub use user::SercliUser;
-
-use crate::server::Backend;
-
-pub type AuthSession<User> = axum_login::AuthSession<Backend<User>>;

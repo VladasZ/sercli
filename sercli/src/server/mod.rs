@@ -1,21 +1,17 @@
-mod backend;
+mod authorized_user;
 mod errors_handling;
 mod handle;
-mod header_map_utils;
 mod server;
 
 use std::fmt::{Debug, Display, Formatter};
 
+pub use authorized_user::*;
 use axum::{
-    http::StatusCode,
+    http::{StatusCode, header::ToStrError},
     response::{IntoResponse, Response},
 };
-pub use axum_login::AuthUser;
-pub use backend::*;
 pub use errors_handling::*;
 pub use handle::*;
-pub use header_map_utils::*;
-use password_auth::VerifyError;
 pub use server::*;
 use tokio::task::JoinHandle;
 
@@ -71,8 +67,8 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
-impl From<VerifyError> for AppError {
-    fn from(value: VerifyError) -> Self {
+impl From<ToStrError> for AppError {
+    fn from(value: ToStrError) -> Self {
         Self(value.into())
     }
 }
