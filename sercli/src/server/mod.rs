@@ -1,5 +1,6 @@
 mod authorize_request;
 mod authorized_user;
+mod crud;
 mod errors_handling;
 mod handle;
 mod server;

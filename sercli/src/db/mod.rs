@@ -45,7 +45,7 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     unsafe { set_var("DATABASE_URL", Postgres::connection_string()?) };
 
-    dbg!("Migrations: OK");
+    dbg!("Migrations: OK", Postgres::connection_string()?);
 
     Ok(pool)
 }
