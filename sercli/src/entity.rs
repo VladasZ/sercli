@@ -28,6 +28,9 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
         let mut fields = String::new();
 
         for field in T::fields() {
+            if field.is_id() {
+                continue;
+            }
             fields.push_str(&field_to_sql(field));
         }
 
@@ -44,16 +47,15 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
     }
 
     fn insert_query() -> String {
-        let columns: Vec<_> = T::fields().iter().map(|field| field.name.to_string()).collect();
+        let fields: Vec<_> = T::fields().iter().filter(|f| !f.is_id()).collect();
+
+        let columns: Vec<_> = fields.iter().map(|field| field.name.to_string()).collect();
         let columns = columns.join(", ");
 
-        let placeholders = (1..=T::fields().len())
-            .map(|i| format!("${i}"))
-            .collect::<Vec<String>>()
-            .join(", ");
+        let placeholders = (1..=fields.len()).map(|i| format!("${i}")).collect::<Vec<String>>().join(", ");
 
         format!(
-            "INSERT INTO {} ({}) VALUES ({}) RETURNING {};",
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING id, {};",
             T::table_name(),
             columns,
             placeholders,
