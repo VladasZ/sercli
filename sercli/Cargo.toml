@@ -15,6 +15,7 @@ name = "sercli"
 [dependencies]
 Inflector = { workspace = true }
 anyhow = { workspace = true }
+argon2 = { workspace = true }
 axum = { workspace = true }
 derive_more = { workspace = true }
 fake = { workspace = true }

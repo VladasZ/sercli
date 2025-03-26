@@ -10,6 +10,7 @@ ignored = []
 [workspace.dependencies]
 Inflector = "0.11"
 anyhow = "1.0"
+argon2 = "0.6.0-pre.1"
 axum = { version = "0.8", features = ["macros"] }
 derive_more = { version = "2.0.1", features = ["deref", "deref_mut", "from"] }
 fake = "4.2"
