@@ -2,12 +2,12 @@ use std::{collections::HashMap, fs::read_to_string};
 
 use anyhow::{Result, bail};
 use inflector::Inflector;
+use sercli_utils::git_root;
 use sqlparser::{
     ast::{CreateTable, Statement},
     dialect::PostgreSqlDialect,
     parser::Parser,
 };
-use utils::git_root;
 
 use crate::entity::Entity;
 
@@ -142,6 +142,10 @@ mod test {
         assert_eq!(
             migrations.model.get("User").unwrap().to_code(),
             r"
+mod reflected {
+    pub use sercli::reflected::*;
+}
+
 #[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize, reflected::Reflected, sqlx::FromRow)]
 pub struct User {
    pub id: sercli::ID,

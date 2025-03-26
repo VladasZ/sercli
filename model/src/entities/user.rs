@@ -1,4 +1,8 @@
 
+mod reflected {
+    pub use sercli::reflected::*;
+}
+
 #[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize, reflected::Reflected, sqlx::FromRow)]
 pub struct User {
    pub id: sercli::ID,

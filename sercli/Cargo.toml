@@ -29,4 +29,4 @@ tain = { workspace = true }
 tokio = { workspace = true }
 
 generator = { workspace = true }
-utils = { workspace = true }
+sercli_utils = { workspace = true }

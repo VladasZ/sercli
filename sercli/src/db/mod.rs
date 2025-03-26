@@ -2,10 +2,10 @@ use std::{env::set_var, path::PathBuf, time::Duration};
 
 use anyhow::{Result, bail};
 use generator::Generator;
+use sercli_utils::git_root;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tain::Postgres;
 use tokio::time::sleep;
-use utils::git_root;
 
 async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     let mut pool: sqlx::Result<PgPool>;

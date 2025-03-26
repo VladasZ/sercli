@@ -710,8 +710,8 @@ version = "0.1.0"
 dependencies = [
  "Inflector",
  "anyhow",
+ "sercli_utils",
  "sqlparser",
- "utils",
 ]
 
 [[package]]
@@ -1132,7 +1132,6 @@ name = "model"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "reflected",
  "sercli",
  "serde",
  "sqlx",
@@ -1860,12 +1859,19 @@ dependencies = [
  "log",
  "reflected",
  "reqwest",
+ "sercli_utils",
  "serde",
  "serde_json",
  "sqlx",
  "tain",
  "tokio",
- "utils",
+]
+
+[[package]]
+name = "sercli_utils"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]
@@ -2590,13 +2596,6 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
-]
-
-[[package]]
-name = "utils"
-version = "0.1.0"
-dependencies = [
- "anyhow",
 ]
 
 [[package]]
