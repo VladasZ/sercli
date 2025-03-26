@@ -37,26 +37,3 @@ where
         Ok(Self { _p: PhantomData })
     }
 }
-
-// async fn authenticate(&self, creds: Self::Credentials) ->
-// Result<Option<Self::User>, Self::Error> {     let user: Self::User =
-// sqlx::query_as(&format!(         "select * from users where {} = ? ",
-//         User::login_field_name()
-//     ))
-//         .bind(creds.login())
-//         .fetch_one(&self.pg_pool)
-//         .await?;
-//
-//     verify_password(user.password(), creds.password())?;
-//
-//     Ok(Some(user))
-// }
-//
-// async fn get_user(&self, user_id: &UserId<Self>) ->
-// Result<Option<Self::User>, Self::Error> {     let user: Self::User =
-// sqlx::query_as("select * from users where id = ? ")         .bind(user_id)
-//         .fetch_one(&self.pg_pool)
-//         .await?;
-//
-//     Ok(Some(user))
-// }
