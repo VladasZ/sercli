@@ -10,8 +10,6 @@ name = "generator"
 [dependencies]
 Inflector = { workspace = true }
 anyhow = { workspace = true }
-log = { workspace = true }
 sqlparser = { workspace = true }
 
 utils = { workspace = true }
-

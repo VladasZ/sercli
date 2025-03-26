@@ -8,6 +8,7 @@ name = "client"
 
 [dependencies]
 anyhow = { workspace = true }
+fake = { workspace = true }
 model = { workspace = true }
 sercli = { workspace = true }
 tokio = { workspace = true }

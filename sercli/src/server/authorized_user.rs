@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Debug};
 
 use anyhow::anyhow;
 use axum::{
@@ -9,16 +9,16 @@ use derive_more::{Deref, DerefMut, From};
 use sqlx::PgPool;
 use tokio::sync::Mutex;
 
-use crate::{SercliUser, server::AppError};
+use crate::{ID, SercliUser, server::AppError};
 
-pub(crate) static TOKEN_STORAGE: Mutex<BTreeMap<String, i64>> = Mutex::const_new(BTreeMap::new());
+pub(crate) static TOKEN_STORAGE: Mutex<BTreeMap<String, ID>> = Mutex::const_new(BTreeMap::new());
 
 #[derive(Deref, DerefMut, From)]
 pub struct AuthorizedUser<User: SercliUser> {
     user: User,
 }
 
-impl<S: Sync, User: SercliUser> FromRequestParts<S> for AuthorizedUser<User>
+impl<S: Sync, User: SercliUser + Debug> FromRequestParts<S> for AuthorizedUser<User>
 where
     PgPool: FromRef<S>,
     S: Send + Sync,
@@ -34,12 +34,11 @@ where
 
         let token = token.to_str()?;
 
-        let Some(user_id) = dbg!(TOKEN_STORAGE.lock().await).get(token).copied() else {
-            dbg!(&token);
+        let Some(user_id) = TOKEN_STORAGE.lock().await.get(token).copied() else {
             return Err(anyhow!("Invalid authorization token").into());
         };
 
-        let user: User = sqlx::query_as("SELECT * FROM users WHERE id = ? ")
+        let user: User = sqlx::query_as("SELECT * FROM users WHERE id = $1;")
             .bind(user_id)
             .fetch_one(&pool)
             .await?;
@@ -47,26 +46,3 @@ where
         Ok(user.into())
     }
 }
-
-// async fn authenticate(&self, creds: Self::Credentials) ->
-// Result<Option<Self::User>, Self::Error> {     let user: Self::User =
-// sqlx::query_as(&format!(         "select * from users where {} = ? ",
-//         User::login_field_name()
-//     ))
-//         .bind(creds.login())
-//         .fetch_one(&self.pg_pool)
-//         .await?;
-//
-//     verify_password(user.password(), creds.password())?;
-//
-//     Ok(Some(user))
-// }
-//
-// async fn get_user(&self, user_id: &UserId<Self>) ->
-// Result<Option<Self::User>, Self::Error> {     let user: Self::User =
-// sqlx::query_as("select * from users where id = ? ")         .bind(user_id)
-//         .fetch_one(&self.pg_pool)
-//         .await?;
-//
-//     Ok(Some(user))
-// }

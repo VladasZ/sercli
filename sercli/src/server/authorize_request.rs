@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, marker::PhantomData};
+use std::marker::PhantomData;
 
 use axum::{
     extract::{FromRef, FromRequestParts},
@@ -6,11 +6,11 @@ use axum::{
 };
 use fake::Fake;
 use sqlx::PgPool;
-use tokio::sync::Mutex;
 
-use crate::{SercliUser, server::AppError};
-
-pub(crate) static TOKEN_STORAGE: Mutex<BTreeMap<String, i64>> = Mutex::const_new(BTreeMap::new());
+use crate::{
+    SercliUser,
+    server::{AppError, TOKEN_STORAGE},
+};
 
 pub struct AuthorizeRequest<User: SercliUser> {
     _p: PhantomData<User>,

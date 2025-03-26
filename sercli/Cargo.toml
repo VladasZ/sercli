@@ -13,10 +13,10 @@ crate-type = ["rlib", "staticlib"]
 name = "sercli"
 
 [dependencies]
-anyhow = { workspace = true }
 Inflector = { workspace = true }
-async-trait = { workspace = true }
+anyhow = { workspace = true }
 axum = { workspace = true }
+derive_more = { workspace = true }
 fake = { workspace = true }
 log = { workspace = true }
 reflected = { workspace = true }
@@ -26,7 +26,6 @@ serde_json = { workspace = true }
 sqlx = { workspace = true }
 tain = { workspace = true }
 tokio = { workspace = true }
-derive_more = { workspace = true }
 
-utils = { workspace = true }
 generator = { workspace = true }
+utils = { workspace = true }

@@ -112,7 +112,7 @@ mod test {
                     fields:     vec![
                         Field {
                             name: "id".into(),
-                            ty:   "i64",
+                            ty:   "sercli::ID",
                         },
                         Field {
                             name: "email".into(),
@@ -142,9 +142,9 @@ mod test {
         assert_eq!(
             migrations.model.get("User").unwrap().to_code(),
             r"
-#[derive(Debug, PartialEq, Reflected)]
+#[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize, reflected::Reflected, sqlx::FromRow)]
 pub struct User {
-   pub id: usize,
+   pub id: sercli::ID,
    pub email: String,
    pub age: i16,
    pub name: String,
@@ -164,8 +164,8 @@ pub struct User {
 
         assert_eq!(
             migrations.mod_code(),
-            r"mod user
-pub use user::*"
+            r"mod user;
+pub use user::*;"
         );
 
         Ok(())

@@ -35,7 +35,7 @@ fn get_type(ty: &DataType) -> &'static str {
             };
 
             if ident.value == "SERIAL" {
-                "i64"
+                "sercli::ID"
             } else {
                 panic!("Unsipported ident value: {ident}");
             }

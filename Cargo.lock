@@ -93,17 +93,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
-name = "async-trait"
-version = "0.1.83"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "721cae7de5c34fbb2acd27e21e6d2cf7b886dce0c27388d46c4e6c47ea4318dd"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.100",
-]
-
-[[package]]
 name = "atoi"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -345,6 +334,7 @@ name = "client"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fake",
  "model",
  "sercli",
  "server",
@@ -670,7 +660,6 @@ version = "0.1.0"
 dependencies = [
  "Inflector",
  "anyhow",
- "log",
  "sqlparser",
  "utils",
 ]
@@ -1793,7 +1782,6 @@ version = "0.1.0"
 dependencies = [
  "Inflector",
  "anyhow",
- "async-trait",
  "axum",
  "derive_more",
  "fake",
@@ -2288,16 +2276,6 @@ dependencies = [
  "once_cell",
  "rustix",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "tests"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "sercli",
- "tain",
- "tokio",
 ]
 
 [[package]]

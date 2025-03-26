@@ -1,9 +1,9 @@
-use sercli::SercliUser;
+use sercli::{ID, SercliUser};
 
 use crate::entities::User;
 
 impl SercliUser for User {
-    fn id(&self) -> i64 {
+    fn id(&self) -> ID {
         self.id
     }
 

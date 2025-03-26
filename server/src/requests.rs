@@ -33,14 +33,7 @@ pub async fn get_users(
     db: State<PgPool>,
     _: Json<()>,
 ) -> Result<Json<Vec<User>>, AppError> {
-    let users = sqlx::query_as!(
-        User,
-        r#"
-        SELECT * FROM users
-        "#,
-    )
-    .fetch_all(&*db)
-    .await?;
+    let users = sqlx::query_as!(User, "SELECT * FROM users;",).fetch_all(&*db).await?;
 
     Ok(Json(users))
 }
