@@ -1,4 +1,4 @@
-use std::{env::set_var, path::PathBuf, time::Duration};
+use std::{env::set_var, time::Duration};
 
 use anyhow::{Result, bail};
 use generator::Generator;
@@ -37,9 +37,10 @@ pub async fn prepare_db() -> Result<PgPool> {
     let pool = open_pool_when_available(&Postgres::connection_string()?).await?;
 
     let root = git_root()?;
-    let root = root.to_string_lossy();
 
-    let migrator = Migrator::new(PathBuf::from(format!("{root}/model/migrations"))).await?;
+    let migrations_path = root.join("model/migrations");
+
+    let migrator = Migrator::new(migrations_path).await?;
 
     migrator.run(&pool).await?;
 

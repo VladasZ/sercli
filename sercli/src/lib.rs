@@ -15,4 +15,8 @@ pub mod reflected {
     pub use reflected::{Field, Reflected, ToReflectedString, ToReflectedVal, Type};
 }
 
+pub mod axum {
+    pub use axum::*;
+}
+
 pub type ID = i32;
