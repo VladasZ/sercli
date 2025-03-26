@@ -27,6 +27,7 @@ impl<T: Entity> Crud for T {
 
     async fn insert(self, pool: &PgPool) -> Result<Self> {
         let query = T::insert_query();
+        dbg!(&query);
         let query = sqlx::query_as::<Postgres, T>(&query);
         let query = self.bind_to_sqlx_query(query);
 

@@ -25,3 +25,6 @@ lint:
 
 fmt:
 	cargo +nightly fmt --all
+
+pr:
+	gh pr create --fill
