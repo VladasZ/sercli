@@ -11,30 +11,30 @@ env:
 
 jobs:
 
-  build:
-    name: Build
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [
-          #          { os: macos, runner: macos-latest, },
-          #          { os: windows , runner: windows-latest },
-          #
-          #          { os: ios, runner: mac },
-          #          { os: android, runner: ubuntu-latest },
-        ]
-    runs-on: ${{ matrix.target.runner }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{secrets.GITHUB_TOKEN}}
-          submodules: recursive
-
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
+  #  build:
+  #    name: Build
+  #    strategy:
+  #      fail-fast: false
+  #      matrix:
+  #        target: [
+  #          { os: macos, runner: macos-latest, },
+  #          { os: windows , runner: windows-latest },
+  #          #
+  #          #          { os: ios, runner: mac },
+  #          #          { os: android, runner: ubuntu-latest },
+  #        ]
+  #    runs-on: ${{ matrix.target.runner }}
+  #    steps:
+  #      - uses: actions/checkout@v4
+  #        with:
+  #          token: ${{secrets.GITHUB_TOKEN}}
+  #          submodules: recursive
+  #
+  #      - name: Lint
+  #        run: make lint
+  #
+  #      - name: Test
+  #        run: make test
 
   linux:
     name: Build Linux
