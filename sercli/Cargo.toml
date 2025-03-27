@@ -20,6 +20,7 @@ axum = { workspace = true }
 derive_more = { workspace = true }
 fake = { workspace = true }
 log = { workspace = true }
+pasetors = { workspace = true }
 reflected = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
