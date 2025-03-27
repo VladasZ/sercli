@@ -1,7 +1,7 @@
 use anyhow::Result;
 use sqlx::{Executor, PgPool, Postgres, query};
 
-use crate::Entity;
+use crate::{Entity, ID};
 
 #[allow(async_fn_in_trait)]
 pub trait Crud: Sized {
@@ -39,7 +39,7 @@ impl<T: Entity> Crud for T {
             .await?)
     }
 
-    async fn with_id(id: i32, pool: &PgPool) -> Result<Self> {
+    async fn with_id(id: ID, pool: &PgPool) -> Result<Self> {
         Ok(
             sqlx::query_as(&format!("SELECT * FROM {} WHERE id = {id}", T::table_name()))
                 .fetch_one(pool)
@@ -48,7 +48,7 @@ impl<T: Entity> Crud for T {
     }
 
     async fn delete(self, pool: &PgPool) -> Result<()> {
-        let id: i32 = self.value_by_name("id").parse()?;
+        let id: ID = self.value_by_name("id").parse()?;
 
         query(&format!("DELETE FROM {} WHERE id = $1", T::table_name()))
             .bind(id)

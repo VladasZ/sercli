@@ -1,28 +1,25 @@
 use std::marker::PhantomData;
 
+use anyhow::Result;
 use axum::{
     extract::{FromRef, FromRequestParts},
     http::request::Parts,
 };
-use fake::Fake;
 use sqlx::PgPool;
 
 use crate::{
     SercliUser,
-    server::{AppError, TOKEN_STORAGE},
+    server::{AppError, access_token::AccessToken},
 };
 
 pub struct AuthorizeRequest<User: SercliUser> {
-    _p: PhantomData<User>,
+    pool: PgPool,
+    _p:   PhantomData<User>,
 }
 
 impl<User: SercliUser> AuthorizeRequest<User> {
-    pub async fn generate_token(&self, user: &User) -> String {
-        let token: String = 64.fake();
-
-        TOKEN_STORAGE.lock().await.insert(token.clone(), user.id());
-
-        token
+    pub async fn generate_token(&self, user: &User) -> Result<String> {
+        AccessToken::generate_token(user, &self.pool).await
     }
 }
 
@@ -33,7 +30,12 @@ where
 {
     type Rejection = AppError;
 
-    async fn from_request_parts(_parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        Ok(Self { _p: PhantomData })
+    async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let pool = PgPool::from_ref(state);
+
+        Ok(Self {
+            pool,
+            _p: PhantomData,
+        })
     }
 }

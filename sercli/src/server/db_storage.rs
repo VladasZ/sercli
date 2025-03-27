@@ -36,6 +36,15 @@ impl DBStorage {
         Ok(result.map(|(value,)| value))
     }
 
+    pub async fn del(key: &str, pool: &PgPool) -> Result<()> {
+        sqlx::query("DELETE FROM key_value_storage WHERE key = $1;")
+            .bind(key)
+            .execute(pool)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn set_str(key: &str, val: &str, pool: &PgPool) -> Result<()> {
         Self::set(key, val.as_bytes(), pool).await
     }
@@ -63,7 +72,6 @@ mod test {
 
     use anyhow::Result;
     use fake::{Fake, Faker};
-    use sqlx::Executor;
 
     use crate::{db::prepare_db, server::db_storage::DBStorage};
 
@@ -71,7 +79,8 @@ mod test {
     async fn key_value_storage() -> Result<()> {
         let pool = prepare_db().await?;
 
-        pool.execute(sqlx::query("DROP TABLE key_value_storage;")).await?;
+        DBStorage::del("sokol", &pool).await?;
+        DBStorage::del("buff", &pool).await?;
 
         assert_eq!(DBStorage::get("sokol", &pool).await?, None);
 

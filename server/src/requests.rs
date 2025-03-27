@@ -13,7 +13,7 @@ pub async fn handle_register(
 ) -> Result<Json<(String, User)>, AppError> {
     let user = user.0.insert(&db).await?;
 
-    let token = request.generate_token(&user).await;
+    let token = request.generate_token(&user).await?;
 
     Ok(Json((token, user)))
 }

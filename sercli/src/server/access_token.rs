@@ -11,7 +11,7 @@ use pasetors::{
 };
 use sqlx::{Executor, FromRow, PgPool, query, query_as};
 
-use crate::{DBStorage, ID, SercliUser};
+use crate::{DBStorage, ID, SercliUser, server::crud::Crud};
 
 #[derive(Debug, FromRow)]
 struct UserToken {
@@ -37,7 +37,7 @@ impl AccessToken {
         Ok(local::encrypt(&key, &claims, None, None)?)
     }
 
-    pub async fn check_token<User: SercliUser>(user: &User, token: String, pool: &PgPool) -> Result<()> {
+    pub async fn check_token<User: SercliUser>(token: &str, pool: &PgPool) -> Result<User> {
         Self::create_table(pool).await?;
 
         let key = Self::get_encryption_key(pool).await?;
@@ -45,7 +45,7 @@ impl AccessToken {
         let mut validation_rules = ClaimsValidationRules::new();
         validation_rules.allow_non_expiring();
 
-        let untrusted_token = UntrustedToken::<Local, V4>::try_from(&token)?;
+        let untrusted_token = UntrustedToken::<Local, V4>::try_from(&token.to_string())?;
         let trusted_token = local::decrypt(&key, &untrusted_token, &validation_rules, None, None)?;
         let claims = trusted_token.payload_claims().ok_or_else(|| anyhow!("No claims"))?;
 
@@ -68,9 +68,7 @@ impl AccessToken {
             .as_str()
             .ok_or_else(|| anyhow!("Invalid value in user_token"))?;
 
-        if user_id != user.id() {
-            bail!("Invalid user id in claim")
-        };
+        let user = User::with_id(user_id, pool).await?;
 
         if user_login != user.login() {
             bail!("Invalid user login in claim")
@@ -92,9 +90,10 @@ impl AccessToken {
             bail!("Invalid user id in token");
         }
 
-        Ok(())
+        Ok(user)
     }
 
+    #[allow(dead_code)]
     pub async fn invalidate_all_tokens<User: SercliUser>(user: &User, pool: &PgPool) -> Result<()> {
         pool.execute(query("DELETE FROM token_storage WHERE user_id = $1").bind(user.id()))
             .await?;
@@ -152,11 +151,13 @@ impl AccessToken {
 #[cfg(test)]
 mod test {
     use anyhow::Result;
+    use fake::{Fake, faker::internet::en::SafeEmail};
+    use reflected::Reflected;
     use sqlx::FromRow;
 
-    use crate::{ID, SercliUser, db::prepare_db, server::access_token::AccessToken};
+    use crate::{Crud, ID, SercliUser, db::prepare_db, server::access_token::AccessToken};
 
-    #[derive(Clone, FromRow)]
+    #[derive(Debug, Default, Clone, Reflected, FromRow)]
     struct SomeUser {
         id:    ID,
         email: String,
@@ -185,19 +186,25 @@ mod test {
         let pool = prepare_db().await?;
 
         let user = SomeUser {
-            id:    12345,
-            email: "peter@gmail.com".to_string(),
+            id:    0,
+            email: SafeEmail().fake(),
         };
+
+        SomeUser::create_table(&pool).await?;
+
+        let user = user.insert(&pool).await?;
 
         AccessToken::invalidate_all_tokens(&user, &pool).await?;
 
         let token = AccessToken::generate_token(&user, &pool).await?;
 
-        AccessToken::check_token(&user, token.clone(), &pool).await?;
+        let authorized_user: SomeUser = AccessToken::check_token(&token, &pool).await?;
+
+        assert_eq!(user.email, authorized_user.email);
 
         AccessToken::invalidate_all_tokens(&user, &pool).await?;
 
-        let error = AccessToken::check_token(&user, token, &pool)
+        let error = AccessToken::check_token::<SomeUser>(&token, &pool)
             .await
             .expect_err("No error on invalidated token");
 
