@@ -89,6 +89,8 @@ mod test {
             Some("boran".to_string())
         );
 
+        assert_eq!(DBStorage::get("buff", &pool).await?, None);
+
         for _ in 0..100 {
             let buff: Vec<u8> = Faker.fake();
 

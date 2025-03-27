@@ -1,72 +1,207 @@
-use anyhow::Result;
-use sqlx::PgPool;
+use anyhow::{Result, anyhow, bail};
+use fake::Fake;
+use log::error;
+use pasetors::{
+    Local,
+    claims::{Claims, ClaimsValidationRules},
+    keys::SymmetricKey,
+    local,
+    token::UntrustedToken,
+    version4::V4,
+};
+use sqlx::{Executor, FromRow, PgPool, query, query_as};
 
-use crate::SercliUser;
+use crate::{DBStorage, ID, SercliUser};
 
-pub(crate) struct _AccessToken {}
+#[derive(Debug, FromRow)]
+struct UserToken {
+    user_id: ID,
+    token:   String,
+}
 
-impl _AccessToken {
-    pub fn _generate_token<User: SercliUser>(_user: &User, _pool: &PgPool) -> Result<String> {
-        todo!()
+pub(crate) struct AccessToken {}
+
+impl AccessToken {
+    pub async fn generate_token<User: SercliUser>(user: &User, pool: &PgPool) -> Result<String> {
+        Self::create_table(pool).await?;
+
+        let key = Self::get_encryption_key(pool).await?;
+        let token = Self::create_token(user, pool).await?;
+
+        let mut claims = Claims::new()?;
+        claims.non_expiring();
+        claims.add_additional("user_id", user.id())?;
+        claims.add_additional("user_login", user.login())?;
+        claims.add_additional("user_token", token)?;
+
+        Ok(local::encrypt(&key, &claims, None, None)?)
+    }
+
+    pub async fn check_token<User: SercliUser>(user: &User, token: String, pool: &PgPool) -> Result<()> {
+        Self::create_table(pool).await?;
+
+        let key = Self::get_encryption_key(pool).await?;
+
+        let mut validation_rules = ClaimsValidationRules::new();
+        validation_rules.allow_non_expiring();
+
+        let untrusted_token = UntrustedToken::<Local, V4>::try_from(&token)?;
+        let trusted_token = local::decrypt(&key, &untrusted_token, &validation_rules, None, None)?;
+        let claims = trusted_token.payload_claims().ok_or_else(|| anyhow!("No claims"))?;
+
+        let user_id: ID = claims
+            .get_claim("user_id")
+            .ok_or_else(|| anyhow!("No user_id in claim"))?
+            .as_i64()
+            .ok_or_else(|| anyhow!("Invalid value in user_id"))?
+            .try_into()?;
+
+        let user_login: &str = claims
+            .get_claim("user_login")
+            .ok_or_else(|| anyhow!("No user_login in claim"))?
+            .as_str()
+            .ok_or_else(|| anyhow!("Invalid value in user_login"))?;
+
+        let user_token: &str = claims
+            .get_claim("user_token")
+            .ok_or_else(|| anyhow!("No user_token in claim"))?
+            .as_str()
+            .ok_or_else(|| anyhow!("Invalid value in user_token"))?;
+
+        if user_id != user.id() {
+            bail!("Invalid user id in claim")
+        };
+
+        if user_login != user.login() {
+            bail!("Invalid user login in claim")
+        };
+
+        let token: Option<UserToken> = query_as("SELECT * FROM token_storage WHERE token = $1")
+            .bind(user_token)
+            .fetch_optional(pool)
+            .await?;
+
+        let Some(token) = token else {
+            bail!("This token is not valid anymore")
+        };
+
+        // This is a security incident. It means that encryption key has leaked.
+        // Think of a way to notify about this
+        if token.user_id != user.id() {
+            error!("This is bad");
+            bail!("Invalid user id in token");
+        }
+
+        Ok(())
+    }
+
+    pub async fn invalidate_all_tokens<User: SercliUser>(user: &User, pool: &PgPool) -> Result<()> {
+        pool.execute(query("DELETE FROM token_storage WHERE user_id = $1").bind(user.id()))
+            .await?;
+
+        Ok(())
+    }
+
+    async fn get_encryption_key(pool: &PgPool) -> Result<SymmetricKey<V4>> {
+        use pasetors::keys::Generate;
+
+        const STORAGE_KEY: &str = "access_token_encryption_key";
+
+        if let Some(data) = DBStorage::get(STORAGE_KEY, pool).await? {
+            return Ok(SymmetricKey::<V4>::from(&data)?);
+        }
+
+        let key = SymmetricKey::<V4>::generate()?;
+
+        DBStorage::set(STORAGE_KEY, key.as_bytes(), pool).await?;
+
+        Ok(key)
+    }
+
+    async fn create_token<User: SercliUser>(user: &User, pool: &PgPool) -> Result<String> {
+        let token = UserToken {
+            user_id: user.id(),
+            token:   32.fake(),
+        };
+
+        pool.execute(
+            query("INSERT INTO token_storage (user_id, token) VALUES($1, $2)")
+                .bind(token.user_id)
+                .bind(&token.token),
+        )
+        .await?;
+
+        Ok(token.token)
+    }
+
+    async fn create_table(pool: &PgPool) -> Result<()> {
+        pool.execute(query(
+            r"CREATE TABLE IF NOT EXISTS token_storage (
+                   id SERIAL       PRIMARY KEY,
+              user_id INTEGER      NOT NULL,
+                token VARCHAR(255) NOT NULL
+);",
+        ))
+        .await
+        .map_err(|e| anyhow!(e))?;
+
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-
     use anyhow::Result;
+    use sqlx::FromRow;
 
-    #[test]
-    fn generate_token() -> Result<()> {
-        use core::convert::TryFrom;
+    use crate::{ID, SercliUser, db::prepare_db, server::access_token::AccessToken};
 
-        use pasetors::{
-            Local,
-            claims::{Claims, ClaimsValidationRules},
-            keys::{Generate, SymmetricKey},
-            local,
-            token::UntrustedToken,
-            version4::V4,
+    #[derive(Clone, FromRow)]
+    struct SomeUser {
+        id:    ID,
+        email: String,
+    }
+
+    impl SercliUser for SomeUser {
+        fn id(&self) -> ID {
+            self.id
+        }
+
+        fn password(&self) -> &str {
+            todo!()
+        }
+
+        fn login(&self) -> &str {
+            &self.email
+        }
+
+        fn login_field_name() -> &'static str {
+            todo!()
+        }
+    }
+
+    #[tokio::test]
+    async fn generate_token() -> Result<()> {
+        let pool = prepare_db().await?;
+
+        let user = SomeUser {
+            id:    12345,
+            email: "peter@gmail.com".to_string(),
         };
 
-        // Setup the default claims, which include `iat` and `nbf` as the current time
-        // and `exp` of one hour. Add a custom `data` claim as well.
-        let mut claims = Claims::new()?;
-        claims.add_additional("data", "A secret, encrypted message")?;
-        // claims.non_expiring();
+        AccessToken::invalidate_all_tokens(&user, &pool).await?;
 
-        dbg!(&claims);
+        let token = AccessToken::generate_token(&user, &pool).await?;
 
-        // Generate the key and encrypt the claims.
-        let sk = SymmetricKey::<V4>::generate()?;
+        AccessToken::check_token(&user, token.clone(), &pool).await?;
 
-        dbg!(&sk.as_bytes());
+        AccessToken::invalidate_all_tokens(&user, &pool).await?;
 
-        let token = local::encrypt(&sk, &claims, None, Some(b"implicit assertion"))?;
+        let error = AccessToken::check_token(&user, token, &pool)
+            .await
+            .expect_err("No error on invalidated token");
 
-        dbg!(&token);
-
-        // Decide how we want to validate the claims after verifying the token itself.
-        // The default verifies the `nbf`, `iat` and `exp` claims. `nbf` and `iat` are
-        // always expected to be present.
-        // NOTE: Custom claims, defined through `add_additional()`, are not validated.
-        // This must be done manually.
-        let mut validation_rules = ClaimsValidationRules::new();
-        validation_rules.allow_non_expiring();
-        let untrusted_token = UntrustedToken::<Local, V4>::try_from(&token)?;
-        let trusted_token = local::decrypt(
-            &sk,
-            &untrusted_token,
-            &validation_rules,
-            None,
-            Some(b"implicit assertion"),
-        )?;
-        assert_eq!(&claims, trusted_token.payload_claims().unwrap());
-
-        let claims = trusted_token.payload_claims().unwrap();
-
-        println!("{:?}", claims.get_claim("data"));
-        println!("{:?}", claims.get_claim("iat"));
+        assert!(format!("{error}").contains("This token is not valid anymore"));
 
         Ok(())
     }
