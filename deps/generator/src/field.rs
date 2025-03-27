@@ -37,11 +37,13 @@ fn get_type(ty: &DataType) -> &'static str {
             if ident.value == "SERIAL" {
                 "sercli::ID"
             } else {
-                panic!("Unsipported ident value: {ident}");
+                panic!("Unsupported ident value: {ident}");
             }
         }
         DataType::Varchar(_) => "String",
         DataType::SmallInt(_) => "i16",
+        DataType::Integer(_) => "i32",
+        DataType::Decimal(_) => "sercli::Decimal",
         _ => panic!("Unsupported date type: {ty:?}"),
     }
 }

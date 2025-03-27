@@ -28,6 +28,7 @@ serde_json = { workspace = true }
 sqlx = { workspace = true }
 tain = { workspace = true }
 tokio = { workspace = true }
+bigdecimal = { workspace = true }
 
 generator = { workspace = true }
 sercli_utils = { workspace = true }

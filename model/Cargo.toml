@@ -11,6 +11,8 @@ name = "model"
 sercli = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
 
 [build-dependencies]
 anyhow = { workspace = true }

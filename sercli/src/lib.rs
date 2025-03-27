@@ -19,4 +19,6 @@ pub mod axum {
     pub use axum::*;
 }
 
+pub use bigdecimal::BigDecimal as Decimal;
+
 pub type ID = i32;

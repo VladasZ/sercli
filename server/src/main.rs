@@ -1,5 +1,5 @@
-mod requests;
 mod server;
+mod user_requests;
 
 use server::make_server;
 

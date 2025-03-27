@@ -1,7 +1,7 @@
 use model::{GET_USERS, REGISTER};
 use sercli::server::Server;
 
-use crate::requests::{get_users, handle_register};
+use crate::user_requests::{get_users, handle_register};
 
 pub fn make_server() -> Server {
     Server::new()
