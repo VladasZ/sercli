@@ -1,3 +1,4 @@
+mod access_token;
 mod authorize_request;
 mod authorized_user;
 pub(crate) mod crud;
