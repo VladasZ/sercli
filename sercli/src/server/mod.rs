@@ -1,6 +1,7 @@
 mod authorize_request;
 mod authorized_user;
 pub(crate) mod crud;
+pub(crate) mod db_storage;
 mod errors_handling;
 mod handle;
 mod server;

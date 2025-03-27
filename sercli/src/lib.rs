@@ -8,7 +8,7 @@ mod user;
 pub use axum::{Json, extract::State, http::HeaderMap};
 pub use entity::Entity;
 pub use password::{check_password, hash_password};
-pub use server::crud::Crud;
+pub use server::{crud::Crud, db_storage::DBStorage};
 pub use user::SercliUser;
 
 pub mod reflected {
