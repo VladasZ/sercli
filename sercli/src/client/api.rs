@@ -47,4 +47,8 @@ impl API {
     pub fn add_header(key: impl ToString, value: impl ToString) {
         Self::get().headers.lock().unwrap().insert(key.to_string(), value.to_string());
     }
+
+    pub fn set_access_token(token: impl ToString) {
+        Self::add_header("token", token);
+    }
 }

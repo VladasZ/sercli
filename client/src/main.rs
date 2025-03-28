@@ -71,7 +71,7 @@ mod test {
 
         let (token, _user) = register_peter().await?;
 
-        API::add_header("token", token);
+        API::set_access_token(token);
 
         let error = register_peter().await.expect_err("Second register Peter should have failed");
 
