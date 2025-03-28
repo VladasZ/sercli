@@ -28,8 +28,9 @@ jobs:
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
-          brew install docker
-          colima start  
+          brew install colima docker
+          colima start
+          docker version
 
       - uses: actions/checkout@v4
         with:
