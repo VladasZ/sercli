@@ -1,12 +1,12 @@
 use std::fmt::Debug;
 
-use anyhow::anyhow;
+use anyhow::{Result, anyhow};
 use axum::{
     extract::{FromRef, FromRequestParts},
     http::request::Parts,
 };
 use derive_more::{Deref, DerefMut, From};
-use sqlx::PgPool;
+use sqlx::{PgPool, query};
 
 use crate::{
     SercliUser,
@@ -15,7 +15,21 @@ use crate::{
 
 #[derive(Deref, DerefMut, From)]
 pub struct AuthorizedUser<User: SercliUser> {
+    #[deref]
+    #[deref_mut]
     user: User,
+    pool: PgPool,
+}
+
+impl<User: SercliUser> AuthorizedUser<User> {
+    pub async fn revoke_all_tokens(&self) -> Result<()> {
+        query("DELETE FROM token_storage WHERE user_id = $1")
+            .bind(self.user.id())
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
 }
 
 impl<S: Sync, User: SercliUser + Debug> FromRequestParts<S> for AuthorizedUser<User>
@@ -36,6 +50,7 @@ where
 
         Ok(Self {
             user: AccessToken::check_token(token, &pool).await?,
+            pool,
         })
     }
 }
