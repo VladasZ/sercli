@@ -91,7 +91,7 @@ mod test {
     use reflected::Reflected;
     use sqlx::FromRow;
 
-    use crate::{db::prepare_db, server::crud::Crud};
+    use crate::{db::prepare_db, field_extension::FieldExtension, server::crud::Crud};
 
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
@@ -136,6 +136,13 @@ mod test {
             VaccinatedDog::with(VaccinatedDog::FIELDS.name, "fedie", &pool).await?,
             Some(dog.clone())
         );
+
+        assert_eq!(
+            VaccinatedDog::FIELDS.age.is(4234, &pool).await?,
+            Some(dog.clone())
+        );
+
+        assert_eq!(VaccinatedDog::FIELDS.age.is(7564, &pool).await?, None);
 
         dog.delete(&pool).await?;
 
