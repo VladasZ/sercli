@@ -19,6 +19,6 @@ pub mod axum {
     pub use axum::*;
 }
 
-pub use bigdecimal::BigDecimal as Decimal;
+pub use rust_decimal::Decimal;
 
 pub type ID = i32;

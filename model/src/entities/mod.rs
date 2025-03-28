@@ -1,3 +1,4 @@
-mod wallet;
-pub use wallet::*;mod user;
+mod user;
 pub use user::*;
+mod wallet;
+pub use wallet::*;

@@ -8,11 +8,11 @@ crate-type = ["rlib", "staticlib"]
 name = "model"
 
 [dependencies]
+anyhow = { workspace = true }
 sercli = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
 tokio = { workspace = true }
-anyhow = { workspace = true }
 
 [build-dependencies]
 anyhow = { workspace = true }

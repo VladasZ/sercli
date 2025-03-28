@@ -1,5 +1,6 @@
 use anyhow::Result;
-use sqlx::{Executor, PgPool, Postgres, query};
+use reflected::Field;
+use sqlx::{Executor, PgPool, Postgres, query, query_as};
 
 use crate::{Entity, ID};
 
@@ -11,6 +12,11 @@ pub trait Crud: Sized {
     async fn insert(self, pool: &PgPool) -> Result<Self>;
     async fn get_all(pool: &PgPool) -> Result<Vec<Self>>;
     async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
+    async fn with<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        field: Field<Self>,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Option<Self>>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 }
 
@@ -21,7 +27,7 @@ impl<T: Entity> Crud for T {
     }
 
     async fn drop_table(pool: &PgPool) -> Result<()> {
-        pool.execute(&*format!("DROP TABLE {};", T::table_name())).await?;
+        pool.execute(&*format!("DROP TABLE IF EXISTS {};", T::table_name())).await?;
         Ok(())
     }
 
@@ -45,6 +51,26 @@ impl<T: Entity> Crud for T {
                 .fetch_one(pool)
                 .await?,
         )
+    }
+
+    async fn with<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        field: Field<Self>,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Option<Self>> {
+        let query = format!("SELECT * FROM {} WHERE {} = $1", Self::table_name(), field.name);
+
+        // TODO:
+        // I'm too lazy and stupid to figure out these lifetimes now
+        let query_str: &'static String = Box::leak(Box::new(query));
+
+        let result = query_as(query_str).bind(value).fetch_optional(pool).await?;
+
+        let query: Box<String> = Box::new(String::from(query_str));
+
+        drop(query);
+
+        Ok(result)
     }
 
     async fn delete(self, pool: &PgPool) -> Result<()> {
@@ -79,6 +105,8 @@ mod test {
     async fn test() -> Result<()> {
         let pool = prepare_db().await?;
 
+        VaccinatedDog::drop_table(&pool).await?;
+
         let err = VaccinatedDog::get_all(&pool).await.expect_err("Get without table didn't fail");
 
         assert!(format!("{err}").contains("relation \"vaccinated_dogs\" does not exist"));
@@ -103,6 +131,11 @@ mod test {
         assert_eq!(all.first().unwrap(), &dog);
 
         assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
+
+        assert_eq!(
+            VaccinatedDog::with(VaccinatedDog::FIELDS.name, "fedie", &pool).await?,
+            Some(dog.clone())
+        );
 
         dog.delete(&pool).await?;
 

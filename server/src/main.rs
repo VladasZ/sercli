@@ -1,5 +1,6 @@
 mod server;
 mod user_requests;
+mod wallet_requests;
 
 use server::make_server;
 

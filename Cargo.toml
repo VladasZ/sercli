@@ -15,14 +15,14 @@ axum = { version = "0.8", features = ["macros"] }
 derive_more = { version = "2.0.1", features = ["deref", "deref_mut", "from"] }
 fake = "4.2"
 log = "0.4"
-bigdecimal = { version = "0.4", features = ["serde"] }
 pasetors = "0.7"
 reflected = "0.12"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+rust_decimal = { version = "1.37", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sqlparser = "0.55"
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "rust_decimal"] }
 tokio = { version = "1.44", features = ["macros", "rt-multi-thread"] }
 
 tain = "0.4.0"
