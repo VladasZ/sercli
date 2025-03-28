@@ -25,6 +25,12 @@ jobs:
         ]
     runs-on: ${{ matrix.target.runner }}
     steps:
+      - name: Setup docker (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install docker
+          colima start  
+
       - uses: actions/checkout@v4
         with:
           token: ${{secrets.GITHUB_TOKEN}}
