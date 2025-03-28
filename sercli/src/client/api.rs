@@ -14,12 +14,14 @@ pub struct API {
 
 impl API {
     pub fn init(base_url: impl Display) {
-        STATIC_API
+        _ = STATIC_API
             .set(Self {
                 base_url: format!("{base_url}"),
                 headers:  Mutex::default(),
             })
-            .unwrap();
+            .inspect_err(|err| log::error!("err: {err:?}"));
+
+        Self::clear_all_headers();
     }
 
     pub fn is_ok() -> bool {
@@ -42,6 +44,10 @@ impl API {
 
     pub fn remove_header(key: impl ToString) {
         Self::get().headers.lock().unwrap().remove(&key.to_string());
+    }
+
+    pub fn clear_all_headers() {
+        Self::get().headers.lock().unwrap().clear();
     }
 
     pub fn add_header(key: impl ToString, value: impl ToString) {
