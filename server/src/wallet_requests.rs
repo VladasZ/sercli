@@ -21,11 +21,15 @@ pub async fn create_wallet(
 }
 
 pub async fn get_wallets(
-    _user: AuthorizedUser<User>,
-    _db: State<PgPool>,
+    user: AuthorizedUser<User>,
+    db: State<PgPool>,
     _: Json<()>,
 ) -> Result<Json<Vec<Wallet>>, AppError> {
-    //  Ok(Json(wallet))
+    // Weird issue:
+    // = note: this is a known limitation that will be removed in the future (see issue #100013 <https://github.com/rust-lang/rust/issues/100013> for more information)
+    // let wallets = Wallet::FIELDS.user_id.all_where(user.id, &db).await?;
 
-    todo!()
+    let wallets = Wallet::all_where(Wallet::FIELDS.user_id, user.id, &db).await?;
+
+    Ok(Json(wallets))
 }

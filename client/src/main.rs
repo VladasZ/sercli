@@ -25,12 +25,12 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod test {
-    use std::sync::OnceLock;
+    use std::{str::FromStr, sync::OnceLock};
 
     use anyhow::Result;
     use fake::{Fake, faker::internet::en::FreeEmail};
-    use model::{GET_USERS, NON_EXISTING_ENDPOINT, REGISTER, User};
-    use sercli::client::API;
+    use model::{CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet};
+    use sercli::{Decimal, client::API};
     use server::make_server;
     use tokio::sync::oneshot::channel;
 
@@ -56,8 +56,8 @@ mod test {
             "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
         );
 
-        async fn register_peter() -> Result<String> {
-            let (token, _user) = REGISTER
+        async fn register_peter() -> Result<(String, User)> {
+            let (token, user) = REGISTER
                 .send(User {
                     id:       0,
                     email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
@@ -66,10 +66,10 @@ mod test {
                     password: "prostaf".to_string(),
                 })
                 .await?;
-            Ok(token)
+            Ok((token, user))
         }
 
-        let token = register_peter().await?;
+        let (token, _user) = register_peter().await?;
 
         API::add_header("token", token);
 
@@ -97,6 +97,19 @@ mod test {
                 password: "prostaf".to_string(),
             }
         );
+
+        let wallet = Wallet {
+            id:      0,
+            user_id: 0,
+            name:    "Money".to_string(),
+            amount:  Decimal::from_str("1050.25")?,
+        };
+
+        let wallet = CREATE_WALLET.send(wallet).await?;
+
+        assert!(wallet.id != 0 && wallet.user_id != 0);
+
+        assert_eq!(GET_WALLETS.send(()).await?, vec![wallet]);
 
         Ok(())
     }
