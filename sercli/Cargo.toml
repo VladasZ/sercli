@@ -20,8 +20,10 @@ axum = { workspace = true }
 derive_more = { workspace = true }
 fake = { workspace = true }
 log = { workspace = true }
+pasetors = { workspace = true }
 reflected = { workspace = true }
 reqwest = { workspace = true }
+rust_decimal = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
@@ -29,4 +31,4 @@ tain = { workspace = true }
 tokio = { workspace = true }
 
 generator = { workspace = true }
-utils = { workspace = true }
+sercli_utils = { workspace = true }

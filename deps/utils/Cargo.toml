@@ -1,11 +1,11 @@
 [package]
 edition = "2024"
-name = "utils"
+name = "sercli_utils"
 version = "0.1.0"
 
 [lib]
 crate-type = ["rlib", "staticlib"]
-name = "utils"
+name = "sercli_utils"
 
 [dependencies]
 anyhow = { workspace = true }

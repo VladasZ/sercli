@@ -1,7 +1,8 @@
 use anyhow::Result;
-use sqlx::{Executor, PgPool, Postgres, query};
+use reflected::Field;
+use sqlx::{Encode, Executor, PgPool, Postgres, Type, query, query_as};
 
-use crate::Entity;
+use crate::{Entity, ID};
 
 #[allow(async_fn_in_trait)]
 pub trait Crud: Sized {
@@ -11,6 +12,16 @@ pub trait Crud: Sized {
     async fn insert(self, pool: &PgPool) -> Result<Self>;
     async fn get_all(pool: &PgPool) -> Result<Vec<Self>>;
     async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
+    async fn one_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        field: Field<Self>,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Option<Self>>;
+    async fn all_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        field: Field<Self>,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Vec<Self>>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 }
 
@@ -21,7 +32,7 @@ impl<T: Entity> Crud for T {
     }
 
     async fn drop_table(pool: &PgPool) -> Result<()> {
-        pool.execute(&*format!("DROP TABLE {};", T::table_name())).await?;
+        pool.execute(&*format!("DROP TABLE IF EXISTS {};", T::table_name())).await?;
         Ok(())
     }
 
@@ -39,7 +50,7 @@ impl<T: Entity> Crud for T {
             .await?)
     }
 
-    async fn with_id(id: i32, pool: &PgPool) -> Result<Self> {
+    async fn with_id(id: ID, pool: &PgPool) -> Result<Self> {
         Ok(
             sqlx::query_as(&format!("SELECT * FROM {} WHERE id = {id}", T::table_name()))
                 .fetch_one(pool)
@@ -47,8 +58,48 @@ impl<T: Entity> Crud for T {
         )
     }
 
+    async fn one_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        field: Field<Self>,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Option<Self>> {
+        let query = format!("SELECT * FROM {} WHERE {} = $1", Self::table_name(), field.name);
+
+        // TODO:
+        // I'm too lazy and stupid to figure out these lifetimes now
+        let query_str: &'static String = Box::leak(Box::new(query));
+
+        let result = query_as(query_str).bind(value).fetch_optional(pool).await?;
+
+        let query: Box<String> = Box::new(String::from(query_str));
+
+        drop(query);
+
+        Ok(result)
+    }
+
+    async fn all_where<'a, V: 'a + Encode<'a, Postgres> + Type<Postgres>>(
+        field: Field<Self>,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Vec<Self>> {
+        let query = format!("SELECT * FROM {} WHERE {} = $1", Self::table_name(), field.name);
+
+        // TODO:
+        // I'm too lazy and stupid to figure out these lifetimes now
+        let query_str: &'static String = Box::leak(Box::new(query));
+
+        let result = query_as(query_str).bind(value).fetch_all(pool).await?;
+
+        let query: Box<String> = Box::new(String::from(query_str));
+
+        drop(query);
+
+        Ok(result)
+    }
+
     async fn delete(self, pool: &PgPool) -> Result<()> {
-        let id: i32 = self.value_by_name("id").parse()?;
+        let id: ID = self.value_by_name("id").parse()?;
 
         query(&format!("DELETE FROM {} WHERE id = $1", T::table_name()))
             .bind(id)
@@ -65,7 +116,7 @@ mod test {
     use reflected::Reflected;
     use sqlx::FromRow;
 
-    use crate::{db::prepare_db, server::crud::Crud};
+    use crate::{db::prepare_db, field_extension::FieldExtension, server::crud::Crud};
 
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
@@ -78,6 +129,8 @@ mod test {
     #[tokio::test]
     async fn test() -> Result<()> {
         let pool = prepare_db().await?;
+
+        VaccinatedDog::drop_table(&pool).await?;
 
         let err = VaccinatedDog::get_all(&pool).await.expect_err("Get without table didn't fail");
 
@@ -103,6 +156,29 @@ mod test {
         assert_eq!(all.first().unwrap(), &dog);
 
         assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
+
+        assert_eq!(
+            VaccinatedDog::one_where(VaccinatedDog::FIELDS.name, "fedie", &pool).await?,
+            Some(dog.clone())
+        );
+
+        assert_eq!(
+            VaccinatedDog::all_where(VaccinatedDog::FIELDS.name, "fedie", &pool).await?,
+            vec![dog.clone()]
+        );
+
+        assert_eq!(
+            VaccinatedDog::FIELDS.age.one_where(4234, &pool).await?,
+            Some(dog.clone())
+        );
+
+        assert_eq!(
+            VaccinatedDog::FIELDS.age.all_where(4234, &pool).await?,
+            vec![dog.clone()]
+        );
+
+        assert_eq!(VaccinatedDog::FIELDS.age.one_where(7564, &pool).await?, None);
+        assert_eq!(VaccinatedDog::FIELDS.age.all_where(7564, &pool).await?, vec![]);
 
         dog.delete(&pool).await?;
 

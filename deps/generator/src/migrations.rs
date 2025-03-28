@@ -1,20 +1,20 @@
-use std::{collections::HashMap, fs::read_to_string};
+use std::{collections::BTreeMap, fs::read_to_string};
 
 use anyhow::{Result, bail};
 use inflector::Inflector;
+use sercli_utils::git_root;
 use sqlparser::{
     ast::{CreateTable, Statement},
     dialect::PostgreSqlDialect,
     parser::Parser,
 };
-use utils::git_root;
 
 use crate::entity::Entity;
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
 pub struct Migrations {
-    pub model: HashMap<String, Entity>,
+    pub model: BTreeMap<String, Entity>,
 }
 
 impl Migrations {}
@@ -22,7 +22,7 @@ impl Migrations {}
 impl Migrations {
     pub fn get() -> Result<Self> {
         let mut migrations = Self {
-            model: HashMap::default(),
+            model: BTreeMap::default(),
         };
 
         for sql in get_sql()? {
@@ -40,7 +40,8 @@ impl Migrations {
 
             code.push_str(&format!(
                 r"mod {mod_name};
-pub use {mod_name}::*;"
+pub use {mod_name}::*;
+"
             ));
         }
 
@@ -104,35 +105,62 @@ mod test {
 
         assert_eq!(
             migrations.model,
-            [(
-                "User".into(),
-                Entity {
-                    name:       "User".into(),
-                    table_name: "users".into(),
-                    fields:     vec![
-                        Field {
-                            name: "id".into(),
-                            ty:   "sercli::ID",
-                        },
-                        Field {
-                            name: "email".into(),
-                            ty:   "String",
-                        },
-                        Field {
-                            name: "age".into(),
-                            ty:   "i16",
-                        },
-                        Field {
-                            name: "name".into(),
-                            ty:   "String",
-                        },
-                        Field {
-                            name: "password".into(),
-                            ty:   "String",
-                        }
-                    ],
-                }
-            )]
+            [
+                (
+                    "User".into(),
+                    Entity {
+                        name:       "User".into(),
+                        table_name: "users".into(),
+                        fields:     vec![
+                            Field {
+                                name: "id".into(),
+                                ty:   "sercli::ID",
+                            },
+                            Field {
+                                name: "email".into(),
+                                ty:   "String",
+                            },
+                            Field {
+                                name: "age".into(),
+                                ty:   "i16",
+                            },
+                            Field {
+                                name: "name".into(),
+                                ty:   "String",
+                            },
+                            Field {
+                                name: "password".into(),
+                                ty:   "String",
+                            }
+                        ],
+                    }
+                ),
+                (
+                    "Wallet".into(),
+                    Entity {
+                        name:       "Wallet".into(),
+                        table_name: "wallets".into(),
+                        fields:     vec![
+                            Field {
+                                name: "id".into(),
+                                ty:   "sercli::ID",
+                            },
+                            Field {
+                                name: "user_id".into(),
+                                ty:   "i32",
+                            },
+                            Field {
+                                name: "name".into(),
+                                ty:   "String",
+                            },
+                            Field {
+                                name: "amount".into(),
+                                ty:   "sercli::Decimal",
+                            },
+                        ],
+                    }
+                )
+            ]
             .into_iter()
             .collect()
         );
@@ -142,6 +170,10 @@ mod test {
         assert_eq!(
             migrations.model.get("User").unwrap().to_code(),
             r"
+mod reflected {
+    pub use sercli::reflected::*;
+}
+
 #[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize, reflected::Reflected, sqlx::FromRow)]
 pub struct User {
    pub id: sercli::ID,
@@ -165,7 +197,10 @@ pub struct User {
         assert_eq!(
             migrations.mod_code(),
             r"mod user;
-pub use user::*;"
+pub use user::*;
+mod wallet;
+pub use wallet::*;
+"
         );
 
         Ok(())

@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fmt::Debug};
+use std::fmt::Debug;
 
 use anyhow::anyhow;
 use axum::{
@@ -7,11 +7,11 @@ use axum::{
 };
 use derive_more::{Deref, DerefMut, From};
 use sqlx::PgPool;
-use tokio::sync::Mutex;
 
-use crate::{ID, SercliUser, server::AppError};
-
-pub(crate) static TOKEN_STORAGE: Mutex<BTreeMap<String, ID>> = Mutex::const_new(BTreeMap::new());
+use crate::{
+    SercliUser,
+    server::{AppError, access_token::AccessToken},
+};
 
 #[derive(Deref, DerefMut, From)]
 pub struct AuthorizedUser<User: SercliUser> {
@@ -34,15 +34,8 @@ where
 
         let token = token.to_str()?;
 
-        let Some(user_id) = TOKEN_STORAGE.lock().await.get(token).copied() else {
-            return Err(anyhow!("Invalid authorization token").into());
-        };
-
-        let user: User = sqlx::query_as("SELECT * FROM users WHERE id = $1;")
-            .bind(user_id)
-            .fetch_one(&pool)
-            .await?;
-
-        Ok(user.into())
+        Ok(Self {
+            user: AccessToken::check_token(token, &pool).await?,
+        })
     }
 }

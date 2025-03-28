@@ -1,8 +1,8 @@
 use sqlx::{FromRow, postgres::PgRow};
 
-use crate::ID;
+use crate::{Entity, ID};
 
-pub trait SercliUser: Clone + Send + Unpin + for<'r> FromRow<'r, PgRow> + 'static {
+pub trait SercliUser: Entity + Clone + Send + Unpin + for<'r> FromRow<'r, PgRow> + 'static {
     fn id(&self) -> ID;
     fn password(&self) -> &str;
     fn login(&self) -> &str;

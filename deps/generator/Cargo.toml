@@ -12,4 +12,4 @@ Inflector = { workspace = true }
 anyhow = { workspace = true }
 sqlparser = { workspace = true }
 
-utils = { workspace = true }
+sercli_utils = { workspace = true }

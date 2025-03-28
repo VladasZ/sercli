@@ -1,7 +1,7 @@
 use std::{fs::File, io::Write};
 
 use anyhow::Result;
-use utils::git_root;
+use sercli_utils::git_root;
 
 use crate::migrations::Migrations;
 
