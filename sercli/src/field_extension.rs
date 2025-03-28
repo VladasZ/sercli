@@ -7,19 +7,31 @@ use sqlx::{Encode, PgPool, Postgres, Type};
 use crate::Crud;
 
 pub trait FieldExtension<T: Crud>: Sized {
-    async fn is<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+    async fn one_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
         &self,
         value: V,
         pool: &PgPool,
     ) -> Result<Option<T>>;
+    async fn all_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        &self,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Vec<T>>;
 }
 
 impl<T: Crud> FieldExtension<T> for Field<T> {
-    async fn is<'a, V: 'a + Encode<'a, Postgres> + Type<Postgres>>(
+    async fn one_where<'a, V: 'a + Encode<'a, Postgres> + Type<Postgres>>(
         &self,
         value: V,
         pool: &PgPool,
     ) -> Result<Option<T>> {
-        T::with(*self, value, pool).await
+        T::one_where(*self, value, pool).await
+    }
+    async fn all_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
+        &self,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<Vec<T>> {
+        T::all_where(*self, value, pool).await
     }
 }
