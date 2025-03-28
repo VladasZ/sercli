@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [
-          { os: macos, runner: macos-latest, },
+          { os: macos, runner: macos-12, },
           #            { os: windows , runner: windows-latest },
           #
           #          { os: ios, runner: mac },
