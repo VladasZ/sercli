@@ -25,12 +25,9 @@ jobs:
         ]
     runs-on: ${{ matrix.target.runner }}
     steps:
-      - name: Setup docker (missing on MacOS)
+      - uses: docker-practice/actions-setup-docker@master
         if: runner.os == 'macos'
-        run: |
-          brew install colima docker
-          colima start
-          docker version
+        timeout-minutes: 12
 
       - uses: actions/checkout@v4
         with:
