@@ -7,7 +7,7 @@ pub mod server;
 mod user;
 
 pub use axum::{Json, extract::State, http::HeaderMap};
-pub use chrono::{NaiveDateTime as DateTime, Utc};
+pub use chrono::{NaiveDateTime as DateTime};
 pub use entity::Entity;
 pub use field_extension::FieldExtension;
 pub use password::{check_password, hash_password};
