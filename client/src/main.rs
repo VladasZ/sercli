@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
 
     API::init("http://localhost:8000");
 
-    let users = GET_USERS.send(()).await?;
+    let users = GET_USERS.await?;
 
     dbg!(&users);
 
@@ -29,8 +29,10 @@ mod test {
 
     use anyhow::Result;
     use fake::{Fake, faker::internet::en::FreeEmail};
-    use model::{CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet};
-    use sercli::{Decimal, client::API};
+    use model::{
+        CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet, WalletType,
+    };
+    use sercli::{DateTime, Decimal, client::API};
     use server::make_server;
     use tokio::sync::oneshot::channel;
 
@@ -47,7 +49,6 @@ mod test {
         API::init("http://localhost:8000");
 
         let error = NON_EXISTING_ENDPOINT
-            .send(())
             .await
             .expect_err("Non existing endpoint request should have failed");
 
@@ -56,24 +57,25 @@ mod test {
             "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
         );
 
-        async fn register_peter() -> Result<(String, User)> {
-            let (token, user) = REGISTER
-                .send(User {
-                    id:       0,
-                    email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
-                    age:      20,
-                    name:     "Peter".to_string(),
-                    password: "prostaf".to_string(),
-                })
-                .await?;
-            Ok((token, user))
-        }
+        let datetime_str = "2025-03-29 14:30:45";
+        let format = "%Y-%m-%d %H:%M:%S";
 
-        let (token, _user) = register_peter().await?;
+        let peter = User {
+            id:       0,
+            email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
+            age:      20,
+            password: "prostaf".to_string(),
+            birthday: DateTime::parse_from_str(datetime_str, format)?,
+        };
 
-        API::add_header("token", token);
+        let (token, _user) = REGISTER.send(peter.clone()).await?;
 
-        let error = register_peter().await.expect_err("Second register Peter should have failed");
+        API::set_access_token(token);
+
+        let error = REGISTER
+            .send(peter.clone())
+            .await
+            .expect_err("Second register Peter should have failed");
 
         assert_eq!(
             format!("{error}"),
@@ -81,7 +83,7 @@ mod test {
              constraint \"users_email_key\""
         );
 
-        let users = GET_USERS.send(()).await?;
+        let users = GET_USERS.await?;
 
         let Some(user) = users.into_iter().find(|user| user.email == *EMAIL.get().unwrap()) else {
             panic!("Created user not found");
@@ -93,8 +95,8 @@ mod test {
                 id:       user.id,
                 email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
                 age:      20,
-                name:     "Peter".to_string(),
                 password: "prostaf".to_string(),
+                birthday: peter.birthday,
             }
         );
 
@@ -103,13 +105,14 @@ mod test {
             user_id: 0,
             name:    "Money".to_string(),
             amount:  Decimal::from_str("1050.25")?,
+            tp:      WalletType::Crypto,
         };
 
         let wallet = CREATE_WALLET.send(wallet).await?;
 
         assert!(wallet.id != 0 && wallet.user_id != 0);
 
-        assert_eq!(GET_WALLETS.send(()).await?, vec![wallet]);
+        assert_eq!(GET_WALLETS.await?, vec![wallet]);
 
         Ok(())
     }

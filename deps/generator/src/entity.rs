@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::Result;
 use inflector::{Inflector, string::singularize::to_singular};
-use sqlparser::ast::CreateTable;
+use sqlparser::ast::{AlterTableOperation, CreateTable, ObjectName, ObjectNamePart};
 
 use crate::field::Field;
 
@@ -26,6 +26,25 @@ impl Entity {
         file.write_all(self.to_code().as_bytes())?;
 
         Ok(())
+    }
+
+    pub(crate) fn process_alter_table_operations(&mut self, operations: Vec<AlterTableOperation>) {
+        for op in operations {
+            self.process_alter_table_operation(op);
+        }
+    }
+
+    fn process_alter_table_operation(&mut self, operation: AlterTableOperation) {
+        match operation {
+            AlterTableOperation::AddColumn {
+                column_keyword: _,
+                if_not_exists: _,
+                column_def,
+                column_position: _,
+            } => self.fields.push(column_def.into()),
+            AlterTableOperation::AddConstraint(_) => {}
+            _ => unimplemented!("Unsipported alter table operation: {operation}"),
+        }
     }
 
     pub(crate) fn to_code(&self) -> String {
@@ -57,13 +76,36 @@ pub struct {name} {{
 
 impl From<CreateTable> for Entity {
     fn from(value: CreateTable) -> Self {
-        let table_name = format!("{}", value.name);
-        let name = to_singular(&table_name).to_pascal_case();
+        let table_name = format!("{}", value.name).replace('"', "");
 
         Self {
-            name,
+            name: name_to_table_name(&table_name),
             table_name,
             fields: value.columns.into_iter().map(Into::into).collect(),
         }
     }
+}
+
+impl From<ObjectName> for Entity {
+    fn from(value: ObjectName) -> Self {
+        if value.0.len() != 1 {
+            panic!("Check what is there");
+        }
+
+        let part = value.0.first().unwrap();
+
+        let table_name = match part {
+            ObjectNamePart::Identifier(ident) => ident.to_string().replace('"', ""),
+        };
+
+        Self {
+            name: name_to_table_name(&table_name),
+            table_name,
+            fields: vec![],
+        }
+    }
+}
+
+pub(crate) fn name_to_table_name(name: &str) -> String {
+    to_singular(&name.replace('"', "")).to_pascal_case()
 }

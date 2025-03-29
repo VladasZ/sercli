@@ -1,14 +1,15 @@
+use inflector::Inflector;
 use sqlparser::ast::{ColumnDef, DataType};
 
 #[derive(Debug, PartialEq)]
 pub struct Field {
     pub name: String,
-    pub ty:   &'static str,
+    pub ty:   String,
 }
 
 impl Field {
     pub fn to_code(&self) -> String {
-        format!("   pub {}: {},\n", self.name, self.ty)
+        format!("    pub {}: {},\n", self.name, self.ty)
     }
 }
 
@@ -23,7 +24,7 @@ impl From<ColumnDef> for Field {
     }
 }
 
-fn get_type(ty: &DataType) -> &'static str {
+fn get_type(ty: &DataType) -> String {
     match ty {
         DataType::Custom(object_name, _) => {
             let name = object_name.0.first().unwrap_or_else(|| {
@@ -34,16 +35,17 @@ fn get_type(ty: &DataType) -> &'static str {
                 panic!("Failed to convert object name to ident: {object_name}");
             };
 
-            if ident.value == "SERIAL" {
-                "sercli::ID"
+            if ident.value.to_lowercase() == "SERIAL".to_lowercase() {
+                "sercli::ID".into()
             } else {
-                panic!("Unsupported ident value: {ident}");
+                format!("crate::{}", ident.value.to_pascal_case())
             }
         }
-        DataType::Varchar(_) => "String",
-        DataType::SmallInt(_) => "i16",
-        DataType::Integer(_) => "i32",
-        DataType::Decimal(_) => "sercli::Decimal",
+        DataType::Varchar(_) => "String".into(),
+        DataType::SmallInt(_) => "i16".into(),
+        DataType::Integer(_) => "i32".into(),
+        DataType::Decimal(_) => "sercli::Decimal".into(),
+        DataType::Timestamp(_, _) => "sercli::DateTime".into(),
         _ => panic!("Unsupported date type: {ty:?}"),
     }
 }

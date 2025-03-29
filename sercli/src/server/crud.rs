@@ -118,12 +118,32 @@ mod test {
 
     use crate::{db::prepare_db, field_extension::FieldExtension, server::crud::Crud};
 
+    #[derive(
+        strum::Display,
+        strum::EnumString,
+        serde::Serialize,
+        serde::Deserialize,
+        sqlx::Type,
+        Copy,
+        Clone,
+        Default,
+        PartialEq,
+        Debug,
+    )]
+    #[sqlx(type_name = "wallet_type", rename_all = "lowercase")]
+    pub enum WalletType {
+        #[default]
+        Fiat,
+        Crypto,
+    }
+
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
         id:     i32,
         name:   String,
         age:    i32,
         weight: f32,
+        tp:     WalletType,
     }
 
     #[tokio::test]
@@ -145,6 +165,7 @@ mod test {
             name:   "fedie".to_string(),
             age:    4234,
             weight: 42345454.43,
+            tp:     WalletType::Crypto,
         };
 
         let inserted_dog = dog.clone().insert(&pool).await?;
@@ -158,27 +179,27 @@ mod test {
         assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
 
         assert_eq!(
-            VaccinatedDog::one_where(VaccinatedDog::FIELDS.name, "fedie", &pool).await?,
+            VaccinatedDog::one_where(VaccinatedDog::NAME, "fedie", &pool).await?,
             Some(dog.clone())
         );
 
         assert_eq!(
-            VaccinatedDog::all_where(VaccinatedDog::FIELDS.name, "fedie", &pool).await?,
+            VaccinatedDog::all_where(VaccinatedDog::NAME, "fedie", &pool).await?,
             vec![dog.clone()]
         );
 
         assert_eq!(
-            VaccinatedDog::FIELDS.age.one_where(4234, &pool).await?,
+            VaccinatedDog::AGE.one_where(4234, &pool).await?,
             Some(dog.clone())
         );
 
         assert_eq!(
-            VaccinatedDog::FIELDS.age.all_where(4234, &pool).await?,
+            VaccinatedDog::AGE.all_where(4234, &pool).await?,
             vec![dog.clone()]
         );
 
-        assert_eq!(VaccinatedDog::FIELDS.age.one_where(7564, &pool).await?, None);
-        assert_eq!(VaccinatedDog::FIELDS.age.all_where(7564, &pool).await?, vec![]);
+        assert_eq!(VaccinatedDog::AGE.one_where(7564, &pool).await?, None);
+        assert_eq!(VaccinatedDog::AGE.all_where(7564, &pool).await?, vec![]);
 
         dog.delete(&pool).await?;
 

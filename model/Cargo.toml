@@ -12,6 +12,7 @@ anyhow = { workspace = true }
 sercli = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
+strum = { workspace = true }
 tokio = { workspace = true }
 
 [build-dependencies]

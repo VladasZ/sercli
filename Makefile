@@ -20,6 +20,7 @@ lint:
       -A clippy::needless_pass_by_value \
       -A clippy::return_self_not_must_use \
       -A clippy::module_inception \
+      -A clippy::manual_assert \
       \
       -D warnings
 
