@@ -30,7 +30,7 @@ mod test {
     use anyhow::Result;
     use fake::{Fake, faker::internet::en::FreeEmail};
     use model::{CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet};
-    use sercli::{Decimal, client::API};
+    use sercli::{Decimal, Utc, client::API};
     use server::make_server;
     use tokio::sync::oneshot::channel;
 
@@ -55,24 +55,23 @@ mod test {
             "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
         );
 
-        async fn register_peter() -> Result<(String, User)> {
-            let (token, user) = REGISTER
-                .send(User {
-                    id:       0,
-                    email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
-                    age:      20,
-                    name:     "Peter".to_string(),
-                    password: "prostaf".to_string(),
-                })
-                .await?;
-            Ok((token, user))
-        }
+        let peter = User {
+            id:       0,
+            email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
+            age:      20,
+            name:     "Peter".to_string(),
+            password: "prostaf".to_string(),
+            birthday: Utc::now().naive_utc(),
+        };
 
-        let (token, _user) = register_peter().await?;
+        let (token, _user) = REGISTER.send(peter.clone()).await?;
 
         API::set_access_token(token);
 
-        let error = register_peter().await.expect_err("Second register Peter should have failed");
+        let error = REGISTER
+            .send(peter.clone())
+            .await
+            .expect_err("Second register Peter should have failed");
 
         assert_eq!(
             format!("{error}"),
@@ -94,6 +93,7 @@ mod test {
                 age:      20,
                 name:     "Peter".to_string(),
                 password: "prostaf".to_string(),
+                birthday: peter.birthday,
             }
         );
 

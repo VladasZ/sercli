@@ -355,6 +355,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
@@ -1650,9 +1651,9 @@ dependencies = [
 
 [[package]]
 name = "reflected"
-version = "0.16.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75b62970af1396549998125efc1c9d1310ec0462c51f4285eb6fbcf1bd5ec5fa"
+checksum = "68d9ff166e2b5f43d552e861842255e54ec50a94de485ce812a7ebe957a1e4f6"
 dependencies = [
  "chrono",
  "fake",
@@ -1663,9 +1664,9 @@ dependencies = [
 
 [[package]]
 name = "reflected_proc"
-version = "0.16.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8670bc2ca361b31d55fb5199967be32793f793a8e2d23d226ce727d87d84f06a"
+checksum = "77afa476c0d5cfb5aea498edadb0d7d86aa5cfca3cb361a2dba74aa0c9818566"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1928,6 +1929,7 @@ dependencies = [
  "anyhow",
  "argon2",
  "axum",
+ "chrono",
  "derive_more",
  "fake",
  "generator",
@@ -2150,6 +2152,7 @@ dependencies = [
  "atoi",
  "byteorder",
  "bytes",
+ "chrono",
  "crc",
  "crossbeam-queue",
  "either",
@@ -2234,6 +2237,7 @@ dependencies = [
  "bitflags",
  "byteorder",
  "bytes",
+ "chrono",
  "crc",
  "digest 0.10.7",
  "dotenvy",
@@ -2276,6 +2280,7 @@ dependencies = [
  "base64",
  "bitflags",
  "byteorder",
+ "chrono",
  "crc",
  "dotenvy",
  "etcetera",
@@ -2312,6 +2317,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5b2cf34a45953bfd3daaf3db0f7a7878ab9b7a6b91b422d24a7a9e4c857b680"
 dependencies = [
  "atoi",
+ "chrono",
  "flume",
  "futures-channel",
  "futures-core",

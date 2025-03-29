@@ -44,6 +44,7 @@ fn get_type(ty: &DataType) -> &'static str {
         DataType::SmallInt(_) => "i16",
         DataType::Integer(_) => "i32",
         DataType::Decimal(_) => "sercli::Decimal",
+        DataType::Timestamp(_, _) => "sercli::DateTime",
         _ => panic!("Unsupported date type: {ty:?}"),
     }
 }

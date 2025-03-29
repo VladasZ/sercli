@@ -17,6 +17,7 @@ Inflector = { workspace = true }
 anyhow = { workspace = true }
 argon2 = { workspace = true }
 axum = { workspace = true }
+chrono = { workspace = true }
 derive_more = { workspace = true }
 fake = { workspace = true }
 log = { workspace = true }

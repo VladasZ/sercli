@@ -10,4 +10,5 @@ pub struct User {
    pub age: i16,
    pub name: String,
    pub password: String,
+   pub birthday: sercli::DateTime,
 }

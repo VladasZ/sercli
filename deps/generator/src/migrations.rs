@@ -1,10 +1,10 @@
 use std::{collections::BTreeMap, fs::read_to_string};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use inflector::Inflector;
 use sercli_utils::git_root;
 use sqlparser::{
-    ast::{CreateTable, Statement},
+    ast::{AlterTableOperation, CreateTable, HiveSetLocation, Ident, ObjectName, Statement},
     dialect::PostgreSqlDialect,
     parser::Parser,
 };
@@ -50,31 +50,55 @@ pub use {mod_name}::*;
 
     fn process_migration(&mut self, sql: &str) -> Result<()> {
         for statement in Parser::parse_sql(&DIALECT, sql)? {
-            self.process_statement(statement)?;
+            self.process_statement(statement);
         }
 
         Ok(())
     }
 
-    fn process_statement(&mut self, statement: Statement) -> Result<()> {
+    fn process_statement(&mut self, statement: Statement) {
         match statement {
             Statement::CreateTable(create) => self.process_create_table(create),
-            _ => bail!("Unsupported statement: {statement}"),
+            Statement::AlterTable {
+                name,
+                if_exists,
+                only,
+                operations,
+                location,
+                on_cluster,
+            } => self.process_alter_table(name, if_exists, only, operations, location, on_cluster),
+            _ => unimplemented!("Unsupported statement: {statement}"),
         }
     }
 }
 
 impl Migrations {
-    fn process_create_table(&mut self, create: CreateTable) -> Result<()> {
+    fn process_create_table(&mut self, create: CreateTable) {
         let entity: Entity = create.into();
 
         if self.model.contains_key(&entity.name) {
-            bail!("Duplicated entity name. '{}' already exists", entity.name)
+            panic!("Duplicated entity name. '{}' already exists", entity.name)
         }
 
         self.model.insert(entity.name.clone(), entity);
+    }
 
-        Ok(())
+    fn process_alter_table(
+        &mut self,
+        name: ObjectName,
+        _if_exists: bool,
+        _only: bool,
+        operations: Vec<AlterTableOperation>,
+        _location: Option<HiveSetLocation>,
+        _on_cluster: Option<Ident>,
+    ) {
+        let entity: Entity = name.into();
+
+        let Some(existing_entity) = self.model.get_mut(&entity.name) else {
+            panic!("Entity: {entity:?} doesn't exist yet to alter it")
+        };
+
+        existing_entity.process_alter_table_operations(operations);
     }
 }
 
@@ -131,6 +155,10 @@ mod test {
                             Field {
                                 name: "password".into(),
                                 ty:   "String",
+                            },
+                            Field {
+                                name: "birthday".into(),
+                                ty:   "sercli::DateTime",
                             }
                         ],
                     }
@@ -181,6 +209,7 @@ pub struct User {
    pub age: i16,
    pub name: String,
    pub password: String,
+   pub birthday: sercli::DateTime,
 }
 "
         );
