@@ -4,17 +4,21 @@ use anyhow::Result;
 use inflector::Inflector;
 use sercli_utils::git_root;
 use sqlparser::{
-    ast::{AlterTableOperation, CreateTable, HiveSetLocation, Ident, ObjectName, Statement},
+    ast::{
+        AlterTableOperation, CreateTable, HiveSetLocation, Ident, ObjectName, Statement,
+        UserDefinedTypeRepresentation,
+    },
     dialect::PostgreSqlDialect,
     parser::Parser,
 };
 
-use crate::entity::Entity;
+use crate::{entity::Entity, pg_enum::PgEnum};
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
 pub struct Migrations {
-    pub model: BTreeMap<String, Entity>,
+    pub entities: BTreeMap<String, Entity>,
+    pub enums:    BTreeMap<String, PgEnum>,
 }
 
 impl Migrations {}
@@ -22,7 +26,8 @@ impl Migrations {}
 impl Migrations {
     pub fn get() -> Result<Self> {
         let mut migrations = Self {
-            model: BTreeMap::default(),
+            entities: BTreeMap::default(),
+            enums:    BTreeMap::default(),
         };
 
         for sql in get_sql()? {
@@ -35,7 +40,17 @@ impl Migrations {
     pub fn mod_code(&self) -> String {
         let mut code = String::new();
 
-        for entity in self.model.values() {
+        for en in self.enums.values() {
+            let mod_name = en.name.to_snake_case();
+
+            code.push_str(&format!(
+                r"mod {mod_name};
+pub use {mod_name}::*;
+"
+            ));
+        }
+
+        for entity in self.entities.values() {
             let mod_name = entity.name.to_snake_case();
 
             code.push_str(&format!(
@@ -67,6 +82,7 @@ pub use {mod_name}::*;
                 location,
                 on_cluster,
             } => self.process_alter_table(name, if_exists, only, operations, location, on_cluster),
+            Statement::CreateType { name, representation } => self.process_create_type(name, representation),
             _ => unimplemented!("Unsupported statement: {statement}"),
         }
     }
@@ -76,11 +92,11 @@ impl Migrations {
     fn process_create_table(&mut self, create: CreateTable) {
         let entity: Entity = create.into();
 
-        if self.model.contains_key(&entity.name) {
+        if self.entities.contains_key(&entity.name) {
             panic!("Duplicated entity name. '{}' already exists", entity.name)
         }
 
-        self.model.insert(entity.name.clone(), entity);
+        self.entities.insert(entity.name.clone(), entity);
     }
 
     fn process_alter_table(
@@ -94,11 +110,17 @@ impl Migrations {
     ) {
         let entity: Entity = name.into();
 
-        let Some(existing_entity) = self.model.get_mut(&entity.name) else {
+        let Some(existing_entity) = self.entities.get_mut(&entity.name) else {
             panic!("Entity: {entity:?} doesn't exist yet to alter it")
         };
 
         existing_entity.process_alter_table_operations(operations);
+    }
+
+    fn process_create_type(&mut self, name: ObjectName, representation: UserDefinedTypeRepresentation) {
+        let en: PgEnum = (name, representation).into();
+
+        self.enums.insert(en.name.clone(), en);
     }
 }
 
@@ -127,8 +149,10 @@ mod test {
     fn entities() -> anyhow::Result<()> {
         let migrations = Migrations::get()?;
 
+        // dbg!(&migrations.entities);
+
         assert_eq!(
-            migrations.model,
+            migrations.entities,
             [
                 (
                     "User".into(),
@@ -138,27 +162,23 @@ mod test {
                         fields:     vec![
                             Field {
                                 name: "id".into(),
-                                ty:   "sercli::ID",
+                                ty:   "sercli::ID".into(),
                             },
                             Field {
                                 name: "email".into(),
-                                ty:   "String",
-                            },
-                            Field {
-                                name: "age".into(),
-                                ty:   "i16",
-                            },
-                            Field {
-                                name: "name".into(),
-                                ty:   "String",
+                                ty:   "String".into(),
                             },
                             Field {
                                 name: "password".into(),
-                                ty:   "String",
+                                ty:   "String".into(),
+                            },
+                            Field {
+                                name: "age".into(),
+                                ty:   "i32".into(),
                             },
                             Field {
                                 name: "birthday".into(),
-                                ty:   "sercli::DateTime",
+                                ty:   "sercli::DateTime".into(),
                             }
                         ],
                     }
@@ -171,19 +191,23 @@ mod test {
                         fields:     vec![
                             Field {
                                 name: "id".into(),
-                                ty:   "sercli::ID",
+                                ty:   "sercli::ID".into(),
                             },
                             Field {
                                 name: "user_id".into(),
-                                ty:   "i32",
+                                ty:   "i32".into(),
                             },
                             Field {
                                 name: "name".into(),
-                                ty:   "String",
+                                ty:   "String".into(),
                             },
                             Field {
                                 name: "amount".into(),
-                                ty:   "sercli::Decimal",
+                                ty:   "sercli::Decimal".into(),
+                            },
+                            Field {
+                                name: "tp".into(),
+                                ty:   "crate::WalletType".into(),
                             },
                         ],
                     }
@@ -193,10 +217,10 @@ mod test {
             .collect()
         );
 
-        println!("{}", migrations.model.get("User").unwrap().to_code());
+        println!("{}", migrations.entities.get("User").unwrap().to_code());
 
         assert_eq!(
-            migrations.model.get("User").unwrap().to_code(),
+            migrations.entities.get("User").unwrap().to_code(),
             r"
 mod reflected {
     pub use sercli::reflected::*;
@@ -204,12 +228,11 @@ mod reflected {
 
 #[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize, reflected::Reflected, sqlx::FromRow)]
 pub struct User {
-   pub id: sercli::ID,
-   pub email: String,
-   pub age: i16,
-   pub name: String,
-   pub password: String,
-   pub birthday: sercli::DateTime,
+    pub id: sercli::ID,
+    pub email: String,
+    pub password: String,
+    pub age: i32,
+    pub birthday: sercli::DateTime,
 }
 "
         );
@@ -225,7 +248,9 @@ pub struct User {
 
         assert_eq!(
             migrations.mod_code(),
-            r"mod user;
+            r"mod wallet_type;
+pub use wallet_type::*;
+mod user;
 pub use user::*;
 mod wallet;
 pub use wallet::*;

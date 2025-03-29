@@ -65,14 +65,17 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
 }
 
 fn field_to_sql<T>(field: &'static Field<T>) -> String {
-    format!("   {} {},\n", field.name, sql_type_from_field(field.tp))
+    format!("   {} {},\n", field.name, sql_type_from_field(field))
 }
 
-fn sql_type_from_field(tp: Type) -> &'static str {
-    match tp {
-        Type::Float => "REAL NOT NULL",
-        Type::Integer => "INTEGER NOT NULL",
-        Type::Text => "VARCHAR(255) NOT NULL",
+fn sql_type_from_field<T>(field: &'static Field<T>) -> String {
+    match field.tp {
+        Type::Float => "REAL NOT NULL".into(),
+        Type::Integer => "INTEGER NOT NULL".into(),
+        Type::Text => "VARCHAR(255) NOT NULL".into(),
+        Type::Enum => {
+            format!("{} NOT NULL", field.type_name.to_snake_case())
+        }
         _ => unimplemented!(),
     }
 }
@@ -84,11 +87,31 @@ mod test {
 
     use crate::Entity;
 
+    #[derive(
+        strum::Display,
+        strum::EnumString,
+        serde::Serialize,
+        serde::Deserialize,
+        sqlx::Type,
+        Copy,
+        Clone,
+        Default,
+        PartialEq,
+        Debug,
+    )]
+    #[sqlx(type_name = "wallet_type", rename_all = "lowercase")]
+    pub enum WalletType {
+        #[default]
+        Fiat,
+        Crypto,
+    }
+
     #[derive(Default, Reflected, FromRow)]
     struct Cat {
         age:    i32,
         name:   String,
         weight: f32,
+        tp:     WalletType,
     }
 
     #[test]
@@ -106,6 +129,7 @@ mod test {
             a:    i32,
             name: String,
             sss:  f32,
+            tp:   WalletType,
         }
         assert_eq!(PremiumPackage::table_name(), "premium_packages");
 
@@ -136,7 +160,8 @@ mod test {
    id SERIAL PRIMARY KEY,
    age INTEGER NOT NULL,
    name VARCHAR(255) NOT NULL,
-   weight REAL NOT NULL
+   weight REAL NOT NULL,
+   tp wallet_type NOT NULL
 );"
         );
     }

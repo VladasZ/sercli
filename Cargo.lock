@@ -1171,6 +1171,7 @@ dependencies = [
  "sercli",
  "serde",
  "sqlx",
+ "strum",
  "tokio",
 ]
 
@@ -1651,9 +1652,9 @@ dependencies = [
 
 [[package]]
 name = "reflected"
-version = "0.18.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68d9ff166e2b5f43d552e861842255e54ec50a94de485ce812a7ebe957a1e4f6"
+checksum = "9ff0c900559d4f569950e63409388b04edd5e1be5eaec07512e8e01fafac68a4"
 dependencies = [
  "chrono",
  "fake",
@@ -1664,9 +1665,9 @@ dependencies = [
 
 [[package]]
 name = "reflected_proc"
-version = "0.18.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77afa476c0d5cfb5aea498edadb0d7d86aa5cfca3cb361a2dba74aa0c9818566"
+checksum = "7e983331884a2dfc45b2e5ba0571fbda213019315d0f988d6e9fa20288bc3c91"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1942,6 +1943,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sqlx",
+ "strum",
  "tain",
  "tokio",
 ]
@@ -2356,6 +2358,28 @@ dependencies = [
  "unicode-bidi",
  "unicode-normalization",
  "unicode-properties",
+]
+
+[[package]]
+name = "strum"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f64def088c51c9510a8579e3c5d67c65349dcf755e5479ad3d010aa6454e2c32"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c77a8c5abcaf0f9ce05d62342b7d298c346515365c36b673df4ebe3ced01fde8"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.100",
 ]
 
 [[package]]

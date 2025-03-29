@@ -118,12 +118,32 @@ mod test {
 
     use crate::{db::prepare_db, field_extension::FieldExtension, server::crud::Crud};
 
+    #[derive(
+        strum::Display,
+        strum::EnumString,
+        serde::Serialize,
+        serde::Deserialize,
+        sqlx::Type,
+        Copy,
+        Clone,
+        Default,
+        PartialEq,
+        Debug,
+    )]
+    #[sqlx(type_name = "wallet_type", rename_all = "lowercase")]
+    pub enum WalletType {
+        #[default]
+        Fiat,
+        Crypto,
+    }
+
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
         id:     i32,
         name:   String,
         age:    i32,
         weight: f32,
+        tp:     WalletType,
     }
 
     #[tokio::test]
@@ -145,6 +165,7 @@ mod test {
             name:   "fedie".to_string(),
             age:    4234,
             weight: 42345454.43,
+            tp:     WalletType::Crypto,
         };
 
         let inserted_dog = dog.clone().insert(&pool).await?;

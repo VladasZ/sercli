@@ -23,8 +23,12 @@ impl Generator {
 
         mod_file.write_all(migrations.mod_code().as_bytes())?;
 
-        for entity in migrations.model.values() {
+        for entity in migrations.entities.values() {
             entity.generate_file(&entities_dir)?;
+        }
+
+        for en in migrations.enums.values() {
+            en.generate_file(&entities_dir)?;
         }
 
         Ok(())

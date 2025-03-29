@@ -29,7 +29,9 @@ mod test {
 
     use anyhow::Result;
     use fake::{Fake, faker::internet::en::FreeEmail};
-    use model::{CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet};
+    use model::{
+        CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet, WalletType,
+    };
     use sercli::{Decimal, Utc, client::API};
     use server::make_server;
     use tokio::sync::oneshot::channel;
@@ -59,7 +61,6 @@ mod test {
             id:       0,
             email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
             age:      20,
-            name:     "Peter".to_string(),
             password: "prostaf".to_string(),
             birthday: Utc::now().naive_utc(),
         };
@@ -91,7 +92,6 @@ mod test {
                 id:       user.id,
                 email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
                 age:      20,
-                name:     "Peter".to_string(),
                 password: "prostaf".to_string(),
                 birthday: peter.birthday,
             }
@@ -102,6 +102,7 @@ mod test {
             user_id: 0,
             name:    "Money".to_string(),
             amount:  Decimal::from_str("1050.25")?,
+            tp:      WalletType::Crypto,
         };
 
         let wallet = CREATE_WALLET.send(wallet).await?;

@@ -42,6 +42,7 @@ impl Entity {
                 column_def,
                 column_position: _,
             } => self.fields.push(column_def.into()),
+            AlterTableOperation::AddConstraint(_) => {}
             _ => unimplemented!("Unsipported alter table operation: {operation}"),
         }
     }
@@ -75,7 +76,7 @@ pub struct {name} {{
 
 impl From<CreateTable> for Entity {
     fn from(value: CreateTable) -> Self {
-        let table_name = format!("{}", value.name);
+        let table_name = format!("{}", value.name).replace('"', "");
 
         Self {
             name: name_to_table_name(&table_name),
@@ -94,7 +95,7 @@ impl From<ObjectName> for Entity {
         let part = value.0.first().unwrap();
 
         let table_name = match part {
-            ObjectNamePart::Identifier(ident) => ident.to_string(),
+            ObjectNamePart::Identifier(ident) => ident.to_string().replace('"', ""),
         };
 
         Self {
@@ -105,6 +106,6 @@ impl From<ObjectName> for Entity {
     }
 }
 
-fn name_to_table_name(name: &str) -> String {
-    to_singular(name).to_pascal_case()
+pub(crate) fn name_to_table_name(name: &str) -> String {
+    to_singular(&name.replace('"', "")).to_pascal_case()
 }
