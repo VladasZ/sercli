@@ -32,7 +32,7 @@ mod test {
     use model::{
         CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet, WalletType,
     };
-    use sercli::{Decimal, Utc, client::API};
+    use sercli::{DateTime, Decimal, client::API};
     use server::make_server;
     use tokio::sync::oneshot::channel;
 
@@ -57,12 +57,15 @@ mod test {
             "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
         );
 
+        let datetime_str = "2025-03-29 14:30:45";
+        let format = "%Y-%m-%d %H:%M:%S";
+
         let peter = User {
             id:       0,
             email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
             age:      20,
             password: "prostaf".to_string(),
-            birthday: Utc::now().naive_utc(),
+            birthday: DateTime::parse_from_str(datetime_str, format)?,
         };
 
         let (token, _user) = REGISTER.send(peter.clone()).await?;
