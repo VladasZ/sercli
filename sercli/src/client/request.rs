@@ -13,6 +13,14 @@ pub struct Request<In: Serialize + DeserializeOwned, Out: DeserializeOwned> {
     _p:       PhantomData<fn(In) -> Out>,
 }
 
+impl<In: Serialize + DeserializeOwned, Out: DeserializeOwned> Clone for Request<In, Out> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<In: Serialize + DeserializeOwned, Out: DeserializeOwned> Copy for Request<In, Out> {}
+
 impl<In: Serialize + DeserializeOwned, Out: DeserializeOwned> Request<In, Out> {
     pub const fn new(name: &'static str) -> Self {
         Self {
@@ -129,4 +137,13 @@ pub async fn raw_request(
     debug!("Response: {} - {}", response.url, response.status);
 
     Ok(response)
+}
+
+impl<Out: DeserializeOwned + 'static> IntoFuture for Request<(), Out> {
+    type Output = Result<Out>;
+    type IntoFuture = std::pin::Pin<Box<dyn Future<Output = Self::Output> + Send>>;
+
+    fn into_future(self) -> Self::IntoFuture {
+        Box::pin(async move { self.send(()).await })
+    }
 }

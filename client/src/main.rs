@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
 
     API::init("http://localhost:8000");
 
-    let users = GET_USERS.send(()).await?;
+    let users = GET_USERS.await?;
 
     dbg!(&users);
 
@@ -47,7 +47,6 @@ mod test {
         API::init("http://localhost:8000");
 
         let error = NON_EXISTING_ENDPOINT
-            .send(())
             .await
             .expect_err("Non existing endpoint request should have failed");
 
@@ -81,7 +80,7 @@ mod test {
              constraint \"users_email_key\""
         );
 
-        let users = GET_USERS.send(()).await?;
+        let users = GET_USERS.await?;
 
         let Some(user) = users.into_iter().find(|user| user.email == *EMAIL.get().unwrap()) else {
             panic!("Created user not found");
@@ -109,7 +108,7 @@ mod test {
 
         assert!(wallet.id != 0 && wallet.user_id != 0);
 
-        assert_eq!(GET_WALLETS.send(()).await?, vec![wallet]);
+        assert_eq!(GET_WALLETS.await?, vec![wallet]);
 
         Ok(())
     }
