@@ -6,3 +6,10 @@ pub enum WalletType {
     Fiat,
     Crypto,
 }
+
+impl sercli::reflected::ToReflectedVal<WalletType> for &str {
+    fn to_reflected_val(&self) -> Result<WalletType, String> {
+        use std::str::FromStr;
+        Ok(WalletType::from_str(self).unwrap())
+    }
+}

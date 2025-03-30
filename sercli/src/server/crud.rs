@@ -113,7 +113,7 @@ impl<T: Entity> Crud for T {
 #[cfg(test)]
 mod test {
     use anyhow::Result;
-    use reflected::Reflected;
+    use reflected::{Reflected, ToReflectedVal};
     use sqlx::FromRow;
 
     use crate::{db::prepare_db, field_extension::FieldExtension, server::crud::Crud};
@@ -135,6 +135,13 @@ mod test {
         #[default]
         Fiat,
         Crypto,
+    }
+
+    impl ToReflectedVal<WalletType> for &str {
+        fn to_reflected_val(&self) -> std::result::Result<WalletType, String> {
+            use std::str::FromStr;
+            Ok(WalletType::from_str(self).unwrap())
+        }
     }
 
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]

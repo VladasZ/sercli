@@ -43,6 +43,13 @@ impl PgEnum {
 pub enum {name} {{
     #[default]
 {fields}}}
+
+impl sercli::reflected::ToReflectedVal<{name}> for &str {{
+    fn to_reflected_val(&self) -> Result<{name}, String> {{
+        use std::str::FromStr;
+        Ok({name}::from_str(self).unwrap())
+    }}
+}}
 "#
         )
     }

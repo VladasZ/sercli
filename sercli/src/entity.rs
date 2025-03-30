@@ -82,7 +82,7 @@ fn sql_type_from_field<T>(field: &'static Field<T>) -> String {
 
 #[cfg(test)]
 mod test {
-    use reflected::Reflected;
+    use reflected::{Reflected, ToReflectedVal};
     use sqlx::FromRow;
 
     use crate::Entity;
@@ -104,6 +104,13 @@ mod test {
         #[default]
         Fiat,
         Crypto,
+    }
+
+    impl ToReflectedVal<WalletType> for &str {
+        fn to_reflected_val(&self) -> std::result::Result<WalletType, String> {
+            use std::str::FromStr;
+            Ok(WalletType::from_str(self).unwrap())
+        }
     }
 
     #[derive(Default, Reflected, FromRow)]

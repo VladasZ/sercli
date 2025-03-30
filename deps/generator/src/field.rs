@@ -47,7 +47,7 @@ fn get_type(ty: &DataType) -> String {
         DataType::Decimal(_) => "sercli::Decimal".into(),
         DataType::Timestamp(_, _) => "sercli::DateTime".into(),
         DataType::Real => "f32".into(),
-        DataType::Interval => "std::time::Duration".into(),
+        DataType::Interval => "sercli::Duration".into(),
         _ => panic!("Unsupported date type: {ty:?}"),
     }
 }
