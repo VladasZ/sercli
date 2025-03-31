@@ -65,7 +65,7 @@ mod test {
             email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
             age:      20,
             password: "prostaf".to_string(),
-            birthday: DateTime::parse_from_str(datetime_str, format)?,
+            birthday: DateTime::parse_from_str(datetime_str, format)?.into(),
         };
 
         let (token, _user) = REGISTER.send(peter.clone()).await?;
