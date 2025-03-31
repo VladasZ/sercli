@@ -50,3 +50,7 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     Ok(pool)
 }
+
+pub fn wipe_db() -> Result<()> {
+    Postgres::wipe_container_env()
+}
