@@ -32,6 +32,8 @@ pub fn generate_model() -> Result<()> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
+    dbg!("Started migrations for:", Postgres::connection_string()?);
+
     Postgres::start_env()?;
 
     let pool = open_pool_when_available(&Postgres::connection_string()?).await?;
@@ -45,8 +47,6 @@ pub async fn prepare_db() -> Result<PgPool> {
     migrator.run(&pool).await?;
 
     unsafe { set_var("DATABASE_URL", Postgres::connection_string()?) };
-
-    dbg!("Migrations: OK", Postgres::connection_string()?);
 
     Ok(pool)
 }
