@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fs::read_to_string};
+use std::{collections::BTreeMap, fmt::Write, fs::read_to_string};
 
 use anyhow::Result;
 use inflector::Inflector;
@@ -37,30 +37,32 @@ impl Migrations {
         Ok(migrations)
     }
 
-    pub fn mod_code(&self) -> String {
+    pub fn mod_code(&self) -> Result<String> {
         let mut code = String::new();
 
         for en in self.enums.values() {
             let mod_name = en.name.to_snake_case();
 
-            code.push_str(&format!(
+            write!(
+                code,
                 r"mod {mod_name};
 pub use {mod_name}::*;
 "
-            ));
+            )?;
         }
 
         for entity in self.entities.values() {
             let mod_name = entity.name.to_snake_case();
 
-            code.push_str(&format!(
+            write!(
+                code,
                 r"mod {mod_name};
 pub use {mod_name}::*;
 "
-            ));
+            )?;
         }
 
-        code
+        Ok(code)
     }
 
     fn process_migration(&mut self, sql: &str) -> Result<()> {

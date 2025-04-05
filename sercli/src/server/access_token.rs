@@ -72,7 +72,7 @@ impl AccessToken {
 
         if user_login != user.login() {
             bail!("Invalid user login in claim")
-        };
+        }
 
         let token: Option<UserToken> = query_as("SELECT * FROM token_storage WHERE token = $1")
             .bind(user_token)
