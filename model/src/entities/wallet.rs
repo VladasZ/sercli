@@ -1,4 +1,3 @@
-
 #[allow(clippy::wildcard_imports)]
 use sercli::*;
 
@@ -17,9 +16,9 @@ mod reflected {
     sqlx::FromRow,
 )]
 pub struct Wallet {
-    pub id: ID,
+    pub id:      ID,
     pub user_id: i32,
-    pub name: String,
-    pub amount: Decimal,
-    pub tp: crate::WalletType,
+    pub name:    String,
+    pub amount:  Decimal,
+    pub tp:      crate::WalletType,
 }
