@@ -2504,9 +2504,9 @@ dependencies = [
 
 [[package]]
 name = "tain"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61de3443e1589b0cbe40973c53a74626f6643313d15490f40050178902bec534"
+checksum = "826d69156d247d2b3ebe47f3012eed74ad6e6f48f6dfcdde9cc35fe158675137"
 dependencies = [
  "anyhow",
  "dirs",
