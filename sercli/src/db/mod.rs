@@ -32,7 +32,7 @@ pub fn generate_model() -> Result<()> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
-    dbg!("Started migrations for:", Postgres::connection_string()?);
+    dbg!(Postgres::connection_string()?);
 
     Postgres::start_env()?;
 
