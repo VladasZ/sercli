@@ -1,4 +1,8 @@
-use std::{collections::BTreeMap, fmt::Write, fs::read_to_string};
+use std::{
+    collections::BTreeMap,
+    fmt::Write,
+    fs::{DirEntry, read_to_string},
+};
 
 use anyhow::Result;
 use inflector::Inflector;
@@ -130,10 +134,13 @@ impl Migrations {
 fn get_sql() -> Result<impl Iterator<Item = String>> {
     let path = git_root()?.join("model/migrations");
 
+    let mut entries: Vec<_> = std::fs::read_dir(path)?.filter_map(Result::ok).collect();
+
+    entries.sort_by_key(DirEntry::path);
+
     let mut result = vec![];
 
-    for entry in std::fs::read_dir(path)? {
-        let entry = entry?;
+    for entry in entries {
         let file_path = entry.path();
 
         if file_path.is_file() {
