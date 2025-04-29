@@ -1,6 +1,7 @@
 mod access_token;
 mod authorize_request;
 mod authorized_user;
+mod compose;
 pub(crate) mod crud;
 pub(crate) mod db_storage;
 mod errors_handling;
@@ -15,6 +16,7 @@ use axum::{
     http::{StatusCode, header::ToStrError},
     response::{IntoResponse, Response},
 };
+pub use compose::connection_string_from_compose;
 pub use errors_handling::*;
 pub use handle::*;
 pub use server::*;

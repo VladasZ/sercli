@@ -11,7 +11,7 @@ pub use chrono::{Duration, NaiveDateTime as DateTime, Utc};
 pub use entity::Entity;
 pub use field_extension::FieldExtension;
 pub use password::{check_password, hash_password};
-pub use server::{crud::Crud, db_storage::DBStorage};
+pub use server::{connection_string_from_compose, crud::Crud, db_storage::DBStorage};
 pub use user::SercliUser;
 
 pub mod reflected {
