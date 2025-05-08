@@ -4,7 +4,7 @@ use anyhow::Result;
 use axum::{Json, Router, extract::State, handler::Handler, routing::get};
 use serde::{Serialize, de::DeserializeOwned};
 use sqlx::PgPool;
-use tokio::{net::TcpListener, runtime::Runtime, spawn, sync::oneshot::Sender};
+use tokio::{net::TcpListener, runtime::Runtime, spawn, sync::oneshot};
 
 use crate::{
     SercliUser,
@@ -77,21 +77,31 @@ impl Server {
         self
     }
 
-    pub fn start(self) -> Result<()> {
+    pub fn start_blocking(self) -> Result<()> {
         let runtime = Runtime::new()?;
         runtime.block_on(async { self.start_internal(None).await })?;
         Ok(())
     }
 
-    pub fn spawn(self, started: Option<Sender<ServerHandle>>) -> Result<()> {
+    pub async fn spawn(self) -> Result<ServerHandle> {
+        let (se, re) = oneshot::channel();
+
+        self.spawn_internal(se)?;
+
+        let handle = re.await?;
+
+        Ok(handle)
+    }
+
+    fn spawn_internal(self, started: oneshot::Sender<ServerHandle>) -> Result<()> {
         spawn(async {
-            self.start_internal(started).await.expect("Failed to spawn server");
+            self.start_internal(started.into()).await.expect("Failed to spawn server");
         });
 
         Ok(())
     }
 
-    async fn start_internal(self, started: Option<Sender<ServerHandle>>) -> Result<()> {
+    async fn start_internal(self, started: Option<oneshot::Sender<ServerHandle>>) -> Result<()> {
         let listener = TcpListener::bind("0.0.0.0:8000").await?;
 
         let (handle, receiver) = ServerHandle::new();

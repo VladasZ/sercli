@@ -6,11 +6,7 @@ use tokio::sync::oneshot::channel;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (se, rc) = channel();
-
-    make_server().spawn(se.into())?;
-
-    let handle = rc.await?;
+    let handle = make_server().spawn().await?;
 
     dbg!(&handle);
 
@@ -40,11 +36,7 @@ mod test {
     async fn test_response_errors() -> Result<()> {
         static EMAIL: OnceLock<String> = OnceLock::new();
 
-        let (se, rc) = channel();
-
-        make_server().spawn(se.into())?;
-
-        let _handle = rc.await?;
+        make_server().spawn().await?;
 
         API::init("http://localhost:8000");
 

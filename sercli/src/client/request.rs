@@ -8,6 +8,7 @@ use serde_json::{from_str, to_string};
 
 use crate::client::{API, Method, Response};
 
+#[derive(Debug)]
 pub struct Request<In: Serialize + DeserializeOwned, Out: DeserializeOwned> {
     pub name: &'static str,
     _p:       PhantomData<fn(In) -> Out>,
