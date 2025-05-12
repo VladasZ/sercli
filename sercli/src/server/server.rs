@@ -86,19 +86,17 @@ impl Server {
     pub async fn spawn(self) -> Result<ServerHandle> {
         let (se, re) = oneshot::channel();
 
-        self.spawn_internal(se)?;
+        self.spawn_internal(se);
 
         let handle = re.await?;
 
         Ok(handle)
     }
 
-    fn spawn_internal(self, started: oneshot::Sender<ServerHandle>) -> Result<()> {
+    fn spawn_internal(self, started: oneshot::Sender<ServerHandle>) {
         spawn(async {
             self.start_internal(started.into()).await.expect("Failed to spawn server");
         });
-
-        Ok(())
     }
 
     async fn start_internal(self, started: Option<oneshot::Sender<ServerHandle>>) -> Result<()> {
@@ -113,10 +111,10 @@ impl Server {
         .with_graceful_shutdown(receiver);
 
         if let Some(started) = started {
-            tokio::join!(server, async {
-                started.send(handle).unwrap();
-            })
-            .0?;
+            let (server_result, sender_result) = tokio::join!(server, async { started.send(handle) });
+
+            server_result?;
+            sender_result.unwrap();
         } else {
             server.await?;
         }

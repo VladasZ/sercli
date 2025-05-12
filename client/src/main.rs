@@ -2,7 +2,6 @@ use anyhow::Result;
 use model::GET_USERS;
 use sercli::client::API;
 use server::make_server;
-use tokio::sync::oneshot::channel;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,13 +29,12 @@ mod test {
     };
     use sercli::{DateTime, Decimal, client::API};
     use server::make_server;
-    use tokio::sync::oneshot::channel;
 
     #[tokio::test]
     async fn test_response_errors() -> Result<()> {
         static EMAIL: OnceLock<String> = OnceLock::new();
 
-        make_server().spawn().await?;
+        let _handle = make_server().spawn().await?;
 
         API::init("http://localhost:8000");
 
