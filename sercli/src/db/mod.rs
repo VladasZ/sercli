@@ -62,7 +62,8 @@ pub fn wipe_db() -> Result<()> {
 }
 
 fn compose_up() -> Result<()> {
-    let status = Command::new("docker-compose")
+    let status = Command::new("docker")
+        .arg("compose")
         .arg("up")
         .arg("-d")
         .stdout(Stdio::inherit())
@@ -79,8 +80,8 @@ fn compose_up() -> Result<()> {
 }
 
 fn compose_down() -> Result<()> {
-    let status = Command::new("docker-compose")
-        .args(["down", "--volumes", "--remove-orphans"])
+    let status = Command::new("docker")
+        .args(["compose", "down", "--volumes", "--remove-orphans"])
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()?;

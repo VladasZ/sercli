@@ -1,11 +1,12 @@
 use anyhow::Result;
-use reflected::Field;
+use reflected::{Field, Reflected};
 use sqlx::{Encode, Executor, PgPool, Postgres, Type, query, query_as};
 
+use crate::server::crud::CrudRequest;
 use crate::{Entity, ID};
 
 #[allow(async_fn_in_trait)]
-pub trait Crud: Sized {
+pub trait Crud: Sized + Entity {
     async fn create_table(pool: &PgPool) -> Result<()>;
     async fn drop_table(pool: &PgPool) -> Result<()>;
 
@@ -23,6 +24,8 @@ pub trait Crud: Sized {
         pool: &PgPool,
     ) -> Result<Vec<Self>>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
+
+    fn get(pool: &PgPool) -> CrudRequest<Self>;
 }
 
 impl<T: Entity> Crud for T {
@@ -69,7 +72,11 @@ impl<T: Entity> Crud for T {
         // I'm too lazy and stupid to figure out these lifetimes now
         let query_str: &'static String = Box::leak(Box::new(query));
 
-        let result = query_as(query_str).bind(value).fetch_optional(pool).await?;
+        let query = query_as(query_str);
+
+        let bind = query.bind(value);
+
+        let result = bind.fetch_optional(pool).await?;
 
         let query: Box<String> = Box::new(String::from(query_str));
 
@@ -107,6 +114,10 @@ impl<T: Entity> Crud for T {
             .await?;
 
         Ok(())
+    }
+
+    fn get(pool: &PgPool) -> CrudRequest<Self> {
+        CrudRequest::new(pool)
     }
 }
 
@@ -146,11 +157,11 @@ mod test {
 
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
-        id:     i32,
-        name:   String,
-        age:    i32,
+        id: i32,
+        name: String,
+        age: i32,
         weight: f32,
-        tp:     WalletType,
+        tp: WalletType,
     }
 
     #[tokio::test]
@@ -168,11 +179,11 @@ mod test {
         assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![]);
 
         let dog = VaccinatedDog {
-            id:     1,
-            name:   "fedie".to_string(),
-            age:    4234,
+            id: 1,
+            name: "fedie".to_string(),
+            age: 4234,
             weight: 42345454.43,
-            tp:     WalletType::Crypto,
+            tp: WalletType::Crypto,
         };
 
         let inserted_dog = dog.clone().insert(&pool).await?;
