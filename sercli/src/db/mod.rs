@@ -41,6 +41,8 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     let conn = connection_string_from_compose()?;
 
+    dbg!(&conn);
+
     let pool = open_pool_when_available(&conn).await?;
 
     let root = git_root()?;

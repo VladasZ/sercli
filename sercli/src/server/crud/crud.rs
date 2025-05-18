@@ -1,9 +1,7 @@
 use anyhow::Result;
-use reflected::{Field, Reflected};
-use sqlx::{Encode, Executor, PgPool, Postgres, Type, query, query_as};
+use sqlx::{Executor, PgPool, Postgres, query};
 
-use crate::server::crud::CrudRequest;
-use crate::{Entity, ID};
+use crate::{Entity, ID, server::crud::CrudRequest};
 
 #[allow(async_fn_in_trait)]
 pub trait Crud: Sized + Entity {
@@ -13,16 +11,6 @@ pub trait Crud: Sized + Entity {
     async fn insert(self, pool: &PgPool) -> Result<Self>;
     async fn get_all(pool: &PgPool) -> Result<Vec<Self>>;
     async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
-    async fn one_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
-        field: Field<Self>,
-        value: V,
-        pool: &PgPool,
-    ) -> Result<Option<Self>>;
-    async fn all_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
-        field: Field<Self>,
-        value: V,
-        pool: &PgPool,
-    ) -> Result<Vec<Self>>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 
     fn get(pool: &PgPool) -> CrudRequest<Self>;
@@ -59,50 +47,6 @@ impl<T: Entity> Crud for T {
                 .fetch_one(pool)
                 .await?,
         )
-    }
-
-    async fn one_where<'a, V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres>>(
-        field: Field<Self>,
-        value: V,
-        pool: &PgPool,
-    ) -> Result<Option<Self>> {
-        let query = format!("SELECT * FROM {} WHERE {} = $1", Self::table_name(), field.name);
-
-        // TODO:
-        // I'm too lazy and stupid to figure out these lifetimes now
-        let query_str: &'static String = Box::leak(Box::new(query));
-
-        let query = query_as(query_str);
-
-        let bind = query.bind(value);
-
-        let result = bind.fetch_optional(pool).await?;
-
-        let query: Box<String> = Box::new(String::from(query_str));
-
-        drop(query);
-
-        Ok(result)
-    }
-
-    async fn all_where<'a, V: 'a + Encode<'a, Postgres> + Type<Postgres>>(
-        field: Field<Self>,
-        value: V,
-        pool: &PgPool,
-    ) -> Result<Vec<Self>> {
-        let query = format!("SELECT * FROM {} WHERE {} = $1", Self::table_name(), field.name);
-
-        // TODO:
-        // I'm too lazy and stupid to figure out these lifetimes now
-        let query_str: &'static String = Box::leak(Box::new(query));
-
-        let result = query_as(query_str).bind(value).fetch_all(pool).await?;
-
-        let query: Box<String> = Box::new(String::from(query_str));
-
-        drop(query);
-
-        Ok(result)
     }
 
     async fn delete(self, pool: &PgPool) -> Result<()> {
@@ -157,11 +101,11 @@ mod test {
 
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
-        id: i32,
-        name: String,
-        age: i32,
+        id:     i32,
+        name:   String,
+        age:    i32,
         weight: f32,
-        tp: WalletType,
+        tp:     WalletType,
     }
 
     #[tokio::test]
@@ -179,16 +123,35 @@ mod test {
         assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![]);
 
         let dog = VaccinatedDog {
-            id: 1,
-            name: "fedie".to_string(),
-            age: 4234,
-            weight: 42345454.43,
-            tp: WalletType::Crypto,
+            id:     1,
+            name:   "fedie".to_string(),
+            age:    4234,
+            weight: 42.43,
+            tp:     WalletType::Crypto,
         };
 
         let inserted_dog = dog.clone().insert(&pool).await?;
 
         assert_eq!(inserted_dog, dog);
+
+        let no_dog = VaccinatedDog::get(&pool)
+            .with(VaccinatedDog::NAME, "bon")
+            .and(VaccinatedDog::AGE, 150)
+            .and(VaccinatedDog::WEIGHT, 150.5)
+            .one()
+            .await?;
+
+        assert_eq!(no_dog, None);
+
+        let found_dog = VaccinatedDog::get(&pool)
+            .with(VaccinatedDog::NAME, "fedie")
+            .and(VaccinatedDog::AGE, 4234)
+            .and(VaccinatedDog::ID, inserted_dog.id)
+            // .and(VaccinatedDog::WEIGHT, 42.43) TODO: why no found by float?
+            .one()
+            .await?;
+
+        assert_eq!(found_dog, Some(inserted_dog));
 
         let all = VaccinatedDog::get_all(&pool).await?;
 
@@ -197,12 +160,12 @@ mod test {
         assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
 
         assert_eq!(
-            VaccinatedDog::one_where(VaccinatedDog::NAME, "fedie", &pool).await?,
+            VaccinatedDog::get(&pool).with(VaccinatedDog::NAME, "fedie").one().await?,
             Some(dog.clone())
         );
 
         assert_eq!(
-            VaccinatedDog::all_where(VaccinatedDog::NAME, "fedie", &pool).await?,
+            VaccinatedDog::get(&pool).with(VaccinatedDog::NAME, "fedie").all().await?,
             vec![dog.clone()]
         );
 
