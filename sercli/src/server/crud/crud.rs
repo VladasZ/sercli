@@ -126,7 +126,7 @@ mod test {
             id:     1,
             name:   "fedie".to_string(),
             age:    4234,
-            weight: 42.43,
+            weight: 5.125,
             tp:     WalletType::Crypto,
         };
 
@@ -147,7 +147,7 @@ mod test {
             .with(VaccinatedDog::NAME, "fedie")
             .and(VaccinatedDog::AGE, 4234)
             .and(VaccinatedDog::ID, inserted_dog.id)
-            // .and(VaccinatedDog::WEIGHT, 42.43) TODO: why no found by float?
+            .and(VaccinatedDog::WEIGHT, 5.125)
             .one()
             .await?;
 
