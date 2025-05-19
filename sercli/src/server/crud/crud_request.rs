@@ -1,7 +1,4 @@
-use std::{
-    fmt::{Debug, Write},
-    marker::PhantomData,
-};
+use std::fmt::Write;
 
 use anyhow::Result;
 use reflected::Field;
@@ -14,34 +11,36 @@ type ArgBind<'a, T> =
 
 type Bind<'a, T> = (Field<T>, ArgBind<'a, T>);
 
-pub struct CrudRequest<'pool, 'query, T: Entity> {
+pub struct CrudRequest<'pool, 'args, T: Entity> {
     pool:  &'pool PgPool,
-    binds: Vec<Bind<'query, T>>,
-    _p:    PhantomData<T>,
+    binds: Vec<Bind<'args, T>>,
+    q_str: String,
 }
 
-impl<'pool, 'query, T: Entity> CrudRequest<'pool, 'query, T> {
+impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
     pub(crate) fn new(pool: &'pool PgPool) -> Self {
         Self {
             pool,
             binds: vec![],
-            _p: PhantomData,
+            q_str: String::new(),
         }
     }
 
     pub fn with<V>(mut self, field: Field<T>, value: V) -> Self
-    where V: 'query + sqlx::Encode<'query, Postgres> + sqlx::Type<Postgres> + Send + 'static + Debug {
+    where V: sqlx::Encode<'args, Postgres> + sqlx::Type<Postgres> + Send + 'static {
         self.binds.push((field, Box::new(move |q| q.bind(value))));
         self
     }
 
     pub fn and<V>(self, field: Field<T>, value: V) -> Self
-    where V: 'query + sqlx::Encode<'query, Postgres> + sqlx::Type<Postgres> + Send + Debug + 'static {
+    where V: sqlx::Encode<'args, Postgres> + sqlx::Type<Postgres> + Send + 'static {
         self.with(field, value)
     }
 
-    fn prepare_query(&mut self) -> Result<QueryAs<'query, Postgres, T, PgArguments>> {
+    fn prepare_query(&mut self) -> Result<QueryAs<'args, Postgres, T, PgArguments>> {
         let query = prepare_string_query(&self.binds)?;
+
+        self.q_str = query.clone();
 
         // TODO:
         // I'm too lazy and stupid to figure out these lifetimes now
@@ -55,6 +54,20 @@ impl<'pool, 'query, T: Entity> CrudRequest<'pool, 'query, T> {
         }
 
         Ok(query)
+    }
+
+    pub async fn one2(&'args mut self) -> Result<Option<T>> {
+        let query = prepare_string_query(&self.binds)?;
+
+        self.q_str = query.clone();
+
+        let mut query = query_as(&self.q_str);
+
+        for (_, bind) in self.binds.drain(..) {
+            query = bind(query);
+        }
+
+        Ok(query.fetch_optional(self.pool).await?)
     }
 
     pub async fn one(mut self) -> Result<Option<T>> {
