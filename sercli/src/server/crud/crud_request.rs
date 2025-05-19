@@ -40,7 +40,7 @@ impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
     fn prepare_query(&mut self) -> Result<QueryAs<'args, Postgres, T, PgArguments>> {
         let query = prepare_string_query(&self.binds)?;
 
-        self.q_str = query.clone();
+        self.q_str.clone_from(&query);
 
         // TODO:
         // I'm too lazy and stupid to figure out these lifetimes now
@@ -59,7 +59,7 @@ impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
     pub async fn one2(&'args mut self) -> Result<Option<T>> {
         let query = prepare_string_query(&self.binds)?;
 
-        self.q_str = query.clone();
+        self.q_str.clone_from(&query);
 
         let mut query = query_as(&self.q_str);
 
