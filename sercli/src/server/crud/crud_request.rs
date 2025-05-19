@@ -9,17 +9,19 @@ use sqlx::{PgPool, Postgres, postgres::PgArguments, query::QueryAs, query_as};
 
 use crate::Entity;
 
-type Bind<'a, T> =
+type ArgBind<'a, T> =
     Box<dyn FnOnce(QueryAs<'a, Postgres, T, PgArguments>) -> QueryAs<'a, Postgres, T, PgArguments> + Send>;
 
-pub struct CrudRequest<'a, T: Entity> {
-    pool:  &'a PgPool,
-    binds: Vec<(Field<T>, Bind<'a, T>)>,
+type Bind<'a, T> = (Field<T>, ArgBind<'a, T>);
+
+pub struct CrudRequest<'pool, 'query, T: Entity> {
+    pool:  &'pool PgPool,
+    binds: Vec<Bind<'query, T>>,
     _p:    PhantomData<T>,
 }
 
-impl<'a, T: Entity> CrudRequest<'a, T> {
-    pub(crate) fn new(pool: &'a PgPool) -> Self {
+impl<'pool, 'query, T: Entity> CrudRequest<'pool, 'query, T> {
+    pub(crate) fn new(pool: &'pool PgPool) -> Self {
         Self {
             pool,
             binds: vec![],
@@ -28,26 +30,18 @@ impl<'a, T: Entity> CrudRequest<'a, T> {
     }
 
     pub fn with<V>(mut self, field: Field<T>, value: V) -> Self
-    where V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres> + Send + 'static + Debug {
+    where V: 'query + sqlx::Encode<'query, Postgres> + sqlx::Type<Postgres> + Send + 'static + Debug {
         self.binds.push((field, Box::new(move |q| q.bind(value))));
         self
     }
 
     pub fn and<V>(self, field: Field<T>, value: V) -> Self
-    where V: 'a + sqlx::Encode<'a, Postgres> + sqlx::Type<Postgres> + Send + Debug + 'static {
+    where V: 'query + sqlx::Encode<'query, Postgres> + sqlx::Type<Postgres> + Send + Debug + 'static {
         self.with(field, value)
     }
 
-    fn prepare_query(&mut self) -> Result<QueryAs<'a, Postgres, T, PgArguments>> {
-        let mut query = format!("SELECT * FROM {} ", T::table_name());
-
-        for (i, (field, _)) in self.binds.iter().enumerate() {
-            if i == 0 {
-                write!(query, "WHERE {} = ${} ", field.name, i + 1)?;
-            } else {
-                write!(query, "AND {} = ${} ", field.name, i + 1)?;
-            }
-        }
+    fn prepare_query(&mut self) -> Result<QueryAs<'query, Postgres, T, PgArguments>> {
+        let query = prepare_string_query(&self.binds)?;
 
         // TODO:
         // I'm too lazy and stupid to figure out these lifetimes now
@@ -70,4 +64,18 @@ impl<'a, T: Entity> CrudRequest<'a, T> {
     pub async fn all(mut self) -> Result<Vec<T>> {
         Ok(self.prepare_query()?.fetch_all(self.pool).await?)
     }
+}
+
+fn prepare_string_query<T: Entity>(binds: &[Bind<T>]) -> Result<String> {
+    let mut query = format!("SELECT * FROM {} ", T::table_name());
+
+    for (i, (field, _)) in binds.iter().enumerate() {
+        if i == 0 {
+            write!(query, "WHERE {} = ${} ", field.name, i + 1)?;
+        } else {
+            write!(query, "AND {} = ${} ", field.name, i + 1)?;
+        }
+    }
+
+    Ok(query)
 }
