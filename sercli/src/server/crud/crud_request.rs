@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{fmt::Write, mem::transmute};
 
 use anyhow::Result;
 use reflected::Field;
@@ -38,14 +38,13 @@ impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
     }
 
     fn prepare_query(&mut self) -> Result<QueryAs<'args, Postgres, T, PgArguments>> {
-        let query = prepare_string_query(&self.binds)?;
-
-        self.q_str.clone_from(&query);
+        self.q_str = prepare_string_query(&self.binds)?;
 
         // TODO:
         // I'm too lazy and stupid to figure out these lifetimes now
-        // It leaks
-        let query_str: &'static String = Box::leak(Box::new(query));
+        // Query never leaves the request and this string should live inside
+        // `CrudRequest` until execution is done
+        let query_str: &'static str = unsafe { transmute(self.q_str.as_str()) };
 
         let mut query = query_as(query_str);
 
@@ -54,20 +53,6 @@ impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
         }
 
         Ok(query)
-    }
-
-    pub async fn one2(&'args mut self) -> Result<Option<T>> {
-        let query = prepare_string_query(&self.binds)?;
-
-        self.q_str.clone_from(&query);
-
-        let mut query = query_as(&self.q_str);
-
-        for (_, bind) in self.binds.drain(..) {
-            query = bind(query);
-        }
-
-        Ok(query.fetch_optional(self.pool).await?)
     }
 
     pub async fn one(mut self) -> Result<Option<T>> {
