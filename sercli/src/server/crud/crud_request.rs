@@ -6,18 +6,20 @@ use sqlx::{PgPool, Postgres, postgres::PgArguments, query::QueryAs, query_as};
 
 use crate::Entity;
 
-type ArgBind<'a, T> =
-    Box<dyn FnOnce(QueryAs<'a, Postgres, T, PgArguments>) -> QueryAs<'a, Postgres, T, PgArguments> + Send>;
+type ArgBind<T> = Box<
+    dyn FnOnce(QueryAs<'static, Postgres, T, PgArguments>) -> QueryAs<'static, Postgres, T, PgArguments>
+        + Send,
+>;
 
-type Bind<'a, T> = (Field<T>, ArgBind<'a, T>);
+type Bind<T> = (Field<T>, ArgBind<T>);
 
-pub struct CrudRequest<'pool, 'args, T: Entity> {
+pub struct CrudRequest<'pool, T: Entity> {
     pool:  &'pool PgPool,
-    binds: Vec<Bind<'args, T>>,
+    binds: Vec<Bind<T>>,
     q_str: String,
 }
 
-impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
+impl<'pool, T: Entity> CrudRequest<'pool, T> {
     pub(crate) fn new(pool: &'pool PgPool) -> Self {
         Self {
             pool,
@@ -27,17 +29,17 @@ impl<'pool, 'args, T: Entity + 'static> CrudRequest<'pool, 'args, T> {
     }
 
     pub fn with<V>(mut self, field: Field<T>, value: V) -> Self
-    where V: sqlx::Encode<'args, Postgres> + sqlx::Type<Postgres> + Send + 'static {
+    where V: sqlx::Encode<'static, Postgres> + sqlx::Type<Postgres> + Send + 'static {
         self.binds.push((field, Box::new(move |q| q.bind(value))));
         self
     }
 
     pub fn and<V>(self, field: Field<T>, value: V) -> Self
-    where V: sqlx::Encode<'args, Postgres> + sqlx::Type<Postgres> + Send + 'static {
+    where V: sqlx::Encode<'static, Postgres> + sqlx::Type<Postgres> + Send + 'static {
         self.with(field, value)
     }
 
-    fn prepare_query(&mut self) -> Result<QueryAs<'args, Postgres, T, PgArguments>> {
+    fn prepare_query(&mut self) -> Result<QueryAs<'static, Postgres, T, PgArguments>> {
         self.q_str = prepare_string_query(&self.binds)?;
 
         // TODO:
