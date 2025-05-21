@@ -138,10 +138,20 @@ mod test {
             .with(VaccinatedDog::NAME, "bon")
             .and(VaccinatedDog::AGE, 150)
             .and(VaccinatedDog::WEIGHT, 150.5)
-            .one()
+            .one_opt()
             .await?;
 
         assert_eq!(no_dog, None);
+
+        let no_dog = VaccinatedDog::get(&pool)
+            .and(VaccinatedDog::AGE, 150)
+            .and(VaccinatedDog::WEIGHT, 150.5)
+            .one()
+            .await;
+
+        dbg!(&no_dog);
+
+        assert!(format!("{no_dog:?}").contains("vaccinated_dogs not found"));
 
         let found_dog = VaccinatedDog::get(&pool)
             .with(VaccinatedDog::NAME, "fedie")
@@ -151,7 +161,7 @@ mod test {
             .one()
             .await?;
 
-        assert_eq!(found_dog, Some(inserted_dog));
+        assert_eq!(found_dog, inserted_dog);
 
         let all = VaccinatedDog::get_all(&pool).await?;
 
@@ -160,7 +170,7 @@ mod test {
         assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
 
         assert_eq!(
-            VaccinatedDog::get(&pool).with(VaccinatedDog::NAME, "fedie").one().await?,
+            VaccinatedDog::get(&pool).with(VaccinatedDog::NAME, "fedie").one_opt().await?,
             Some(dog.clone())
         );
 

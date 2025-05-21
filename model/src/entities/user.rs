@@ -1,4 +1,3 @@
-
 #[allow(unused_imports)]
 #[allow(clippy::wildcard_imports)]
 use sercli::*;
@@ -18,9 +17,9 @@ mod reflected {
     sqlx::FromRow,
 )]
 pub struct User {
-    pub id: ID,
-    pub email: String,
+    pub id:       ID,
+    pub email:    String,
     pub password: String,
-    pub age: i32,
+    pub age:      i32,
     pub birthday: Option<DateTime>,
 }

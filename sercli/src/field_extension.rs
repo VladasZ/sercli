@@ -25,7 +25,7 @@ impl<T: Crud> FieldExtension<T> for Field<T> {
         value: V,
         pool: &PgPool,
     ) -> Result<Option<T>> {
-        T::get(pool).with(*self, value).one().await
+        T::get(pool).with(*self, value).one_opt().await
     }
     async fn all_where<V: sqlx::Encode<'static, Postgres> + sqlx::Type<Postgres> + Send + 'static>(
         &self,
