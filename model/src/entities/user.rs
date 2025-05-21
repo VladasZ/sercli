@@ -1,4 +1,5 @@
 
+#[allow(unused_imports)]
 #[allow(clippy::wildcard_imports)]
 use sercli::*;
 

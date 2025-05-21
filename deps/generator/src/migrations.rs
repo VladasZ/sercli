@@ -1,4 +1,8 @@
-use std::{collections::BTreeMap, fs::read_to_string};
+use std::{
+    collections::BTreeMap,
+    fmt::Write,
+    fs::{DirEntry, read_to_string},
+};
 
 use anyhow::Result;
 use inflector::Inflector;
@@ -37,30 +41,32 @@ impl Migrations {
         Ok(migrations)
     }
 
-    pub fn mod_code(&self) -> String {
+    pub fn mod_code(&self) -> Result<String> {
         let mut code = String::new();
 
         for en in self.enums.values() {
             let mod_name = en.name.to_snake_case();
 
-            code.push_str(&format!(
+            write!(
+                code,
                 r"mod {mod_name};
 pub use {mod_name}::*;
 "
-            ));
+            )?;
         }
 
         for entity in self.entities.values() {
             let mod_name = entity.name.to_snake_case();
 
-            code.push_str(&format!(
+            write!(
+                code,
                 r"mod {mod_name};
 pub use {mod_name}::*;
 "
-            ));
+            )?;
         }
 
-        code
+        Ok(code)
     }
 
     fn process_migration(&mut self, sql: &str) -> Result<()> {
@@ -83,7 +89,8 @@ pub use {mod_name}::*;
                 on_cluster,
             } => self.process_alter_table(name, if_exists, only, operations, location, on_cluster),
             Statement::CreateType { name, representation } => self.process_create_type(name, representation),
-            _ => unimplemented!("Unsupported statement: {statement}"),
+            Statement::CreateIndex(_) => (),
+            _ => unimplemented!("Unsupported statement: {statement:?}"),
         }
     }
 }
@@ -127,10 +134,13 @@ impl Migrations {
 fn get_sql() -> Result<impl Iterator<Item = String>> {
     let path = git_root()?.join("model/migrations");
 
+    let mut entries: Vec<_> = std::fs::read_dir(path)?.filter_map(Result::ok).collect();
+
+    entries.sort_by_key(DirEntry::path);
+
     let mut result = vec![];
 
-    for entry in std::fs::read_dir(path)? {
-        let entry = entry?;
+    for entry in entries {
         let file_path = entry.path();
 
         if file_path.is_file() {

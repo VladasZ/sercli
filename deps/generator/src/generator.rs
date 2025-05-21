@@ -21,7 +21,7 @@ impl Generator {
 
         let mut mod_file = File::create(entities_dir.join("mod.rs"))?;
 
-        mod_file.write_all(migrations.mod_code().as_bytes())?;
+        mod_file.write_all(migrations.mod_code()?.as_bytes())?;
 
         for entity in migrations.entities.values() {
             entity.generate_file(&entities_dir)?;

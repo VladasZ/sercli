@@ -29,7 +29,7 @@ pub async fn get_wallets(
     // = note: this is a known limitation that will be removed in the future (see issue #100013 <https://github.com/rust-lang/rust/issues/100013> for more information)
     // let wallets = Wallet::FIELDS.user_id.all_where(user.id, &db).await?;
 
-    let wallets = Wallet::all_where(Wallet::USER_ID, user.id, &db).await?;
+    let wallets = Wallet::get(&db).with(Wallet::USER_ID, user.id).all().await?;
 
     Ok(Json(wallets))
 }

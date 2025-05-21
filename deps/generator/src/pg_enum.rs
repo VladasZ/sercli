@@ -1,9 +1,10 @@
 use std::{
+    fmt::Write,
     fs::File,
-    io::Write,
     path::{Path, PathBuf},
 };
 
+use anyhow::Result;
 use inflector::Inflector;
 use sqlparser::ast::{ObjectName, UserDefinedTypeRepresentation};
 
@@ -17,26 +18,28 @@ pub struct PgEnum {
 
 impl PgEnum {
     pub fn generate_file(&self, folder: &Path) -> anyhow::Result<()> {
+        use std::io::Write;
+
         let path = folder.join(self.file_name());
 
         let mut file = File::create_new(&path)?;
 
-        file.write_all(self.to_code().as_bytes())?;
+        file.write_all(self.to_code()?.as_bytes())?;
 
         Ok(())
     }
 
-    pub(crate) fn to_code(&self) -> String {
+    pub(crate) fn to_code(&self) -> Result<String> {
         let name = &self.name;
         let table_name = &self.table_name;
 
         let mut fields = String::new();
 
         for field in &self.cases {
-            fields.push_str(&format!("    {field},\n"));
+            writeln!(fields, "    {field},")?;
         }
 
-        format!(
+        Ok(format!(
             r#"
 #[derive(strum::Display, strum::EnumString, serde::Serialize, serde::Deserialize, sqlx::Type, Copy, Clone, Default, PartialEq, Debug)]
 #[sqlx(type_name = {table_name}, rename_all = "lowercase")]
@@ -51,7 +54,7 @@ impl sercli::reflected::ToReflectedVal<{name}> for &str {{
     }}
 }}
 "#
-        )
+        ))
     }
 
     fn file_name(&self) -> PathBuf {

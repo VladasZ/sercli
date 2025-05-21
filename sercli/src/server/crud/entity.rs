@@ -55,11 +55,10 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
         let placeholders = (1..=fields.len()).map(|i| format!("${i}")).collect::<Vec<String>>().join(", ");
 
         format!(
-            "INSERT INTO {} ({}) VALUES ({}) RETURNING id, {};",
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING *;",
             T::table_name(),
             columns,
-            placeholders,
-            columns
+            placeholders
         )
     }
 }

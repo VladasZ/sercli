@@ -13,7 +13,11 @@ impl ServerHandle {
         let (sender, rc) = channel::<()>();
 
         let rc = async {
-            rc.await.expect("Failed to receive shutdown signal");
+            let result = rc.await;
+
+            result.expect(
+                "Failed to receive server shutdown signal. Was ServerHandle dropped before server shutdown?",
+            );
         };
 
         (Self { sender }, rc)

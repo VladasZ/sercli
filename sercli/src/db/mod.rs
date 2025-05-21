@@ -1,11 +1,16 @@
-use std::{env::set_var, time::Duration};
+use std::{
+    env::set_var,
+    process::{Command, Stdio},
+    time::Duration,
+};
 
 use anyhow::{Result, bail};
 use generator::Generator;
 use sercli_utils::git_root;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
-use tain::Postgres;
 use tokio::time::sleep;
+
+use crate::connection_string_from_compose;
 
 async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     let mut pool: sqlx::Result<PgPool>;
@@ -32,11 +37,13 @@ pub fn generate_model() -> Result<()> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
-    dbg!("Started migrations for:", Postgres::connection_string()?);
+    compose_up()?;
 
-    Postgres::start_env()?;
+    let conn = connection_string_from_compose()?;
 
-    let pool = open_pool_when_available(&Postgres::connection_string()?).await?;
+    dbg!(&conn);
+
+    let pool = open_pool_when_available(&conn).await?;
 
     let root = git_root()?;
 
@@ -46,11 +53,46 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     migrator.run(&pool).await?;
 
-    unsafe { set_var("DATABASE_URL", Postgres::connection_string()?) };
+    unsafe { set_var("DATABASE_URL", conn) };
 
     Ok(pool)
 }
 
 pub fn wipe_db() -> Result<()> {
-    Postgres::wipe_container_env()
+    compose_down()?;
+    Ok(())
+}
+
+fn compose_up() -> Result<()> {
+    let status = Command::new("docker")
+        .arg("compose")
+        .arg("up")
+        .arg("-d")
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()?;
+
+    if status.success() {
+        println!("docker-compose up completed successfully.");
+    } else {
+        eprintln!("docker-compose up failed.");
+    }
+
+    Ok(())
+}
+
+fn compose_down() -> Result<()> {
+    let status = Command::new("docker")
+        .args(["compose", "down", "--volumes", "--remove-orphans"])
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()?;
+
+    if status.success() {
+        println!("docker-compose down completed successfully.");
+    } else {
+        eprintln!("docker-compose down failed.");
+    }
+
+    Ok(())
 }

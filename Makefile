@@ -29,3 +29,6 @@ fmt:
 
 pr:
 	gh pr create --fill
+
+cleanup:
+	cargo test --package model --lib tests::wipe_db -- --ignored
