@@ -1645,9 +1645,9 @@ dependencies = [
 
 [[package]]
 name = "reflected"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74b077804e387c3423acb973dff1e02038e57dab47b98770491376d91c3e4af9"
+checksum = "c897adfdfc57e2c4e1de243ffa0dd84d3949d74478465c0c198f2dbe1146a3e2"
 dependencies = [
  "chrono",
  "fake",
@@ -1658,9 +1658,9 @@ dependencies = [
 
 [[package]]
 name = "reflected_proc"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00955b474ab6e469cb1b4697789240397879a4b41fcf651faec24f6210b2080f"
+checksum = "c991f051f98b76a177a077858ea84fe0d21171373e20b3dfa6d05de1e1aa10e4"
 dependencies = [
  "quote",
  "syn 1.0.109",
