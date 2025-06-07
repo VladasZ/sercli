@@ -1,7 +1,11 @@
-use std::future::Future;
+use std::{
+    future::Future,
+    net::{Ipv4Addr, SocketAddrV4},
+};
 
 use anyhow::Result;
 use axum::{Json, Router, extract::State, handler::Handler, routing::get};
+use log::info;
 use serde::{Serialize, de::DeserializeOwned};
 use sqlx::PgPool;
 use tokio::{net::TcpListener, runtime::Runtime, spawn, sync::oneshot};
@@ -100,7 +104,17 @@ impl Server {
     }
 
     async fn start_internal(self, started: Option<oneshot::Sender<ServerHandle>>) -> Result<()> {
-        let listener = TcpListener::bind("0.0.0.0:8000").await?;
+        let port: u16 = if let Ok(port) = std::env::var("SERVER_PORT") {
+            port.parse()?
+        } else {
+            8000
+        };
+
+        let socket = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
+
+        info!("Starting at: {socket}");
+
+        let listener = TcpListener::bind(socket).await?;
 
         let (handle, receiver) = ServerHandle::new();
 
