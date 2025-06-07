@@ -1,5 +1,4 @@
 use std::{
-    env::set_var,
     process::{Command, Stdio},
     time::Duration,
 };
@@ -37,9 +36,13 @@ pub fn generate_model() -> Result<()> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
-    compose_up()?;
+    let conn = if let Ok(conn) = std::env::var("PG_CONNECTION_STRING") {
+        conn
+    } else {
+        compose_up()?;
 
-    let conn = connection_string_from_compose()?;
+        connection_string_from_compose()?
+    };
 
     dbg!(&conn);
 
@@ -52,8 +55,6 @@ pub async fn prepare_db() -> Result<PgPool> {
     let migrator = Migrator::new(migrations_path).await?;
 
     migrator.run(&pool).await?;
-
-    unsafe { set_var("DATABASE_URL", conn) };
 
     Ok(pool)
 }
