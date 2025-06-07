@@ -1,4 +1,5 @@
 use std::{
+    path::PathBuf,
     process::{Command, Stdio},
     time::Duration,
 };
@@ -48,7 +49,11 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     let pool = open_pool_when_available(&conn).await?;
 
-    let root = git_root()?;
+    let root = if let Ok(root) = git_root() {
+        root
+    } else {
+        PathBuf::from(std::env::var("ROOT_PATH")?)
+    };
 
     let migrations_path = root.join("model/migrations");
 
