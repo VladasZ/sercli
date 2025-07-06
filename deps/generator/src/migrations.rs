@@ -87,6 +87,7 @@ pub use {mod_name}::*;
                 operations,
                 location,
                 on_cluster,
+                iceberg: _,
             } => self.process_alter_table(name, if_exists, only, operations, location, on_cluster),
             Statement::CreateType { name, representation } => self.process_create_type(name, representation),
             Statement::CreateIndex(_) => (),
