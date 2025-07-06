@@ -13,6 +13,8 @@ pub trait Crud: Sized + Entity {
     async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 
+    async fn any_exists(pool: &PgPool) -> Result<bool>;
+
     fn get(pool: &PgPool) -> CrudRequest<Self>;
 }
 
@@ -58,6 +60,14 @@ impl<T: Entity> Crud for T {
             .await?;
 
         Ok(())
+    }
+
+    async fn any_exists(pool: &PgPool) -> Result<bool> {
+        let exists: Option<i32> = sqlx::query_scalar(&format!("SELECT 1 FROM {} LIMIT 1", T::table_name()))
+            .fetch_optional(pool)
+            .await?;
+
+        Ok(exists.is_some())
     }
 
     fn get(pool: &PgPool) -> CrudRequest<Self> {
@@ -122,6 +132,8 @@ mod test {
 
         assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![]);
 
+        assert!(!VaccinatedDog::any_exists(&pool).await?);
+
         let dog = VaccinatedDog {
             id:     1,
             name:   "fedie".to_string(),
@@ -133,6 +145,8 @@ mod test {
         let inserted_dog = dog.clone().insert(&pool).await?;
 
         assert_eq!(inserted_dog, dog);
+
+        assert!(VaccinatedDog::any_exists(&pool).await?);
 
         let no_dog = VaccinatedDog::get(&pool)
             .with(VaccinatedDog::NAME, "bon")
