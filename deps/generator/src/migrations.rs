@@ -42,7 +42,7 @@ impl Migrations {
     }
 
     pub fn mod_code(&self) -> Result<String> {
-        let mut code = String::new();
+        let mut code = "mod model;\npub use model::*;\n".to_string();
 
         for en in self.enums.values() {
             let mod_name = en.name.to_snake_case();
@@ -67,6 +67,42 @@ pub use {mod_name}::*;
         }
 
         Ok(code)
+    }
+
+    pub fn model_code(&self) -> Result<String> {
+        let mut tables = String::new();
+
+        for entity in self.entities.values() {
+            writeln!(tables, "            \"{}\",", entity.table_name)?;
+        }
+
+        tables.pop();
+
+        Ok(format!(
+            r#"
+use anyhow::Result;
+
+pub struct Model;
+
+impl Model {{
+    pub fn tables() -> &'static [&'static str] {{
+        &[
+{tables}
+        ]
+    }}
+
+    pub async fn drop_all_tables(pool: &sqlx::PgPool) -> Result<()> {{
+        use sqlx::Executor;
+
+        for table in Self::tables() {{
+            pool.execute(&*format!("DROP TABLE IF EXISTS {{table}} CASCADE;")).await?;
+        }}
+
+        Ok(())
+    }}
+}}
+        "#
+        ))
     }
 
     fn process_migration(&mut self, sql: &str) -> Result<()> {

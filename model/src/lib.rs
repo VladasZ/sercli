@@ -10,6 +10,9 @@ pub use requests::*;
 mod tests {
 
     use anyhow::Result;
+    use sercli::db::prepare_db;
+
+    use crate::Model;
 
     #[ignore]
     #[tokio::test]
@@ -25,6 +28,8 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn wipe_db() -> Result<()> {
-        sercli::db::wipe_db()
+        let pool = prepare_db().await?;
+        Model::drop_all_tables(&pool).await?;
+        sercli::db::stop_containers()
     }
 }

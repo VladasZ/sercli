@@ -64,7 +64,7 @@ pub async fn prepare_db() -> Result<PgPool> {
     Ok(pool)
 }
 
-pub fn wipe_db() -> Result<()> {
+pub fn stop_containers() -> Result<()> {
     compose_down()?;
     Ok(())
 }
