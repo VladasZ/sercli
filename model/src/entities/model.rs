@@ -6,6 +6,7 @@ pub struct Model;
 impl Model {
     pub fn tables() -> &'static [&'static str] {
         &[
+            "dogs",
             "users",
             "wallets",
         ]
