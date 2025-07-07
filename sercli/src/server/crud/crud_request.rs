@@ -1,6 +1,6 @@
 use std::{fmt::Write, mem::transmute};
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use reflected::Field;
 use sqlx::{PgPool, Postgres, postgres::PgArguments, query::QueryAs, query_as};
 
@@ -57,8 +57,16 @@ impl<'pool, T: Entity> CrudRequest<'pool, T> {
         Ok(query)
     }
 
-    pub async fn one(mut self) -> Result<Option<T>> {
+    pub async fn one_opt(mut self) -> Result<Option<T>> {
         Ok(self.prepare_query()?.fetch_optional(self.pool).await?)
+    }
+
+    pub async fn one(self) -> Result<T> {
+        let Some(val) = self.one_opt().await? else {
+            return Err(anyhow!("{} not found", T::table_name()));
+        };
+
+        Ok(val)
     }
 
     pub async fn all(mut self) -> Result<Vec<T>> {

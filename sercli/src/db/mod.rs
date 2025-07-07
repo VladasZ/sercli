@@ -1,5 +1,5 @@
 use std::{
-    env::set_var,
+    path::PathBuf,
     process::{Command, Stdio},
     time::Duration,
 };
@@ -37,15 +37,23 @@ pub fn generate_model() -> Result<()> {
 }
 
 pub async fn prepare_db() -> Result<PgPool> {
-    compose_up()?;
+    let conn = if let Ok(conn) = std::env::var("PG_CONNECTION_STRING") {
+        conn
+    } else {
+        compose_up()?;
 
-    let conn = connection_string_from_compose()?;
+        connection_string_from_compose()?
+    };
 
     dbg!(&conn);
 
     let pool = open_pool_when_available(&conn).await?;
 
-    let root = git_root()?;
+    let root = if let Ok(root) = git_root() {
+        root
+    } else {
+        PathBuf::from(std::env::var("ROOT_PATH")?)
+    };
 
     let migrations_path = root.join("model/migrations");
 
@@ -53,12 +61,10 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     migrator.run(&pool).await?;
 
-    unsafe { set_var("DATABASE_URL", conn) };
-
     Ok(pool)
 }
 
-pub fn wipe_db() -> Result<()> {
+pub fn stop_containers() -> Result<()> {
     compose_down()?;
     Ok(())
 }

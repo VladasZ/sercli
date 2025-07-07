@@ -1,3 +1,5 @@
+mod model;
+pub use model::*;
 mod wallet_type;
 pub use wallet_type::*;
 mod user;

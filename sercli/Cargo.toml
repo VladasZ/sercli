@@ -6,7 +6,6 @@ homepage = "https://github.com/VladasZ/sercli"
 license = "MIT OR Apache-2.0"
 name = "sercli"
 repository = "https://github.com/VladasZ/sercli"
-version = "0.2.0"
 
 [lib]
 crate-type = ["rlib", "staticlib"]

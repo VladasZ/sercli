@@ -13,6 +13,8 @@ pub trait Crud: Sized + Entity {
     async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 
+    async fn any_exists(pool: &PgPool) -> Result<bool>;
+
     fn get(pool: &PgPool) -> CrudRequest<Self>;
 }
 
@@ -58,6 +60,14 @@ impl<T: Entity> Crud for T {
             .await?;
 
         Ok(())
+    }
+
+    async fn any_exists(pool: &PgPool) -> Result<bool> {
+        let exists: Option<i32> = sqlx::query_scalar(&format!("SELECT 1 FROM {} LIMIT 1", T::table_name()))
+            .fetch_optional(pool)
+            .await?;
+
+        Ok(exists.is_some())
     }
 
     fn get(pool: &PgPool) -> CrudRequest<Self> {
@@ -122,6 +132,8 @@ mod test {
 
         assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![]);
 
+        assert!(!VaccinatedDog::any_exists(&pool).await?);
+
         let dog = VaccinatedDog {
             id:     1,
             name:   "fedie".to_string(),
@@ -134,14 +146,26 @@ mod test {
 
         assert_eq!(inserted_dog, dog);
 
+        assert!(VaccinatedDog::any_exists(&pool).await?);
+
         let no_dog = VaccinatedDog::get(&pool)
             .with(VaccinatedDog::NAME, "bon")
             .and(VaccinatedDog::AGE, 150)
             .and(VaccinatedDog::WEIGHT, 150.5)
-            .one()
+            .one_opt()
             .await?;
 
         assert_eq!(no_dog, None);
+
+        let no_dog = VaccinatedDog::get(&pool)
+            .and(VaccinatedDog::AGE, 150)
+            .and(VaccinatedDog::WEIGHT, 150.5)
+            .one()
+            .await;
+
+        dbg!(&no_dog);
+
+        assert!(format!("{no_dog:?}").contains("vaccinated_dogs not found"));
 
         let found_dog = VaccinatedDog::get(&pool)
             .with(VaccinatedDog::NAME, "fedie")
@@ -151,7 +175,7 @@ mod test {
             .one()
             .await?;
 
-        assert_eq!(found_dog, Some(inserted_dog));
+        assert_eq!(found_dog, inserted_dog);
 
         let all = VaccinatedDog::get_all(&pool).await?;
 
@@ -160,7 +184,7 @@ mod test {
         assert_eq!(VaccinatedDog::with_id(1, &pool).await?, dog);
 
         assert_eq!(
-            VaccinatedDog::get(&pool).with(VaccinatedDog::NAME, "fedie").one().await?,
+            VaccinatedDog::get(&pool).with(VaccinatedDog::NAME, "fedie").one_opt().await?,
             Some(dog.clone())
         );
 
