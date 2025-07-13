@@ -1,5 +1,7 @@
 #![allow(async_fn_in_trait)]
 
+use std::mem::transmute;
+
 use anyhow::Result;
 use reflected::Field;
 use sqlx::{Encode, PgPool, Postgres, Type};
@@ -17,6 +19,11 @@ pub trait FieldExtension<T: Crud>: Sized {
         value: V,
         pool: &PgPool,
     ) -> Result<Vec<T>>;
+    async fn delete_where<V: sqlx::Encode<'static, Postgres> + sqlx::Type<Postgres> + Send + 'static>(
+        &self,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<()>;
 }
 
 impl<T: Crud> FieldExtension<T> for Field<T> {
@@ -33,5 +40,18 @@ impl<T: Crud> FieldExtension<T> for Field<T> {
         pool: &PgPool,
     ) -> Result<Vec<T>> {
         T::get(pool).with(*self, value).all().await
+    }
+
+    async fn delete_where<V: Encode<'static, Postgres> + Type<Postgres> + Send + 'static>(
+        &self,
+        value: V,
+        pool: &PgPool,
+    ) -> Result<()> {
+        let query = format!("DELETE FROM {} WHERE {} = $1", T::table_name(), self.name);
+        let query_str: &'static str = unsafe { transmute(query.as_str()) };
+
+        sqlx::query(query_str).bind(value).execute(pool).await?;
+
+        Ok(())
     }
 }

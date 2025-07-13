@@ -81,7 +81,10 @@ mod test {
     use reflected::{Reflected, ToReflectedVal};
     use sqlx::FromRow;
 
-    use crate::{db::prepare_db, field_extension::FieldExtension, server::crud::Crud};
+    use crate::{
+        db::prepare_db,
+        server::crud::{Crud, field_extension::FieldExtension},
+    };
 
     #[derive(
         strum::Display,
@@ -207,6 +210,18 @@ mod test {
         assert_eq!(VaccinatedDog::AGE.all_where(7564, &pool).await?, vec![]);
 
         dog.delete(&pool).await?;
+
+        assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![]);
+
+        let new_dog = VaccinatedDog::random();
+
+        let new_dog = new_dog.insert(&pool).await?;
+
+        VaccinatedDog::AGE.delete_where(new_dog.age + 1, &pool).await?;
+
+        assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![new_dog.clone()]);
+
+        VaccinatedDog::AGE.delete_where(new_dog.age, &pool).await?;
 
         assert_eq!(VaccinatedDog::get_all(&pool).await?, vec![]);
 
