@@ -5,7 +5,7 @@ use server::make_server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let handle = make_server().spawn().await?;
+    let handle = make_server().spawn("model/migrations").await?;
 
     dbg!(&handle);
 
@@ -34,7 +34,7 @@ mod test {
     async fn test_response_errors() -> Result<()> {
         static EMAIL: OnceLock<String> = OnceLock::new();
 
-        let _handle = make_server().spawn().await?;
+        let _handle = make_server().spawn("../model/migrations").await?;
 
         API::init("http://localhost:8000");
 

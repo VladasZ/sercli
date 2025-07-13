@@ -19,8 +19,8 @@ mod tests {
     async fn setup_db() -> Result<()> {
         use sercli::db::{generate_model, prepare_db};
 
-        generate_model()?;
-        prepare_db().await?;
+        generate_model("../model/migrations")?;
+        prepare_db("../model/migrations").await?;
 
         Ok(())
     }
@@ -28,7 +28,7 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn wipe_db() -> Result<()> {
-        let pool = prepare_db().await?;
+        let pool = prepare_db("../model/migrations").await?;
         Model::drop_all_tables(&pool).await?;
         sercli::db::stop_containers()
     }

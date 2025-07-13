@@ -1,11 +1,12 @@
 [package]
 authors = ["Vladas Zakrevksis <146100@gmail.com>"]
 description = "Server client interactions"
-edition = "2024"
+edition.workspace = true
 homepage = "https://github.com/VladasZ/sercli"
 license = "MIT OR Apache-2.0"
 name = "sercli"
 repository = "https://github.com/VladasZ/sercli"
+version.workspace = true
 
 [lib]
 crate-type = ["rlib", "staticlib"]

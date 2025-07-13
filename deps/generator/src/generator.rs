@@ -1,17 +1,19 @@
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Write, path::Path};
 
 use anyhow::Result;
-use sercli_utils::git_root;
 
 use crate::migrations::Migrations;
 
 pub struct Generator {}
 
 impl Generator {
-    pub fn run() -> Result<()> {
-        let migrations = Migrations::get()?;
+    pub fn run(migrations_path: impl AsRef<Path>) -> Result<()> {
+        let migrations_path = migrations_path.as_ref();
+        let migrations = Migrations::get(migrations_path)?;
 
-        let entities_dir = git_root()?.join("model/src/entities");
+        let migrations_parent = migrations_path.parent().expect("Migrations path has no parent");
+
+        let entities_dir = migrations_parent.join("src/entities");
 
         if entities_dir.exists() {
             std::fs::remove_dir_all(&entities_dir)?;
@@ -35,11 +37,4 @@ impl Generator {
 
         Ok(())
     }
-}
-
-#[test]
-fn generator() -> Result<()> {
-    Generator::run()?;
-
-    Ok(())
 }

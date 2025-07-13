@@ -2,11 +2,11 @@ use std::{
     collections::BTreeMap,
     fmt::Write,
     fs::{DirEntry, read_to_string},
+    path::Path,
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use inflector::Inflector;
-use sercli_utils::git_root;
 use sqlparser::{
     ast::{
         AlterTableOperation, CreateTable, HiveSetLocation, Ident, ObjectName, Statement,
@@ -28,13 +28,13 @@ pub struct Migrations {
 impl Migrations {}
 
 impl Migrations {
-    pub fn get() -> Result<Self> {
+    pub fn get(path: &Path) -> Result<Self> {
         let mut migrations = Self {
             entities: BTreeMap::default(),
             enums:    BTreeMap::default(),
         };
 
-        for sql in get_sql()? {
+        for sql in get_sql(path)? {
             migrations.process_migration(&sql)?;
         }
 
@@ -168,10 +168,11 @@ impl Migrations {
     }
 }
 
-fn get_sql() -> Result<impl Iterator<Item = String>> {
-    let path = git_root()?.join("model/migrations");
-
-    let mut entries: Vec<_> = std::fs::read_dir(path)?.filter_map(Result::ok).collect();
+fn get_sql(path: &Path) -> Result<impl Iterator<Item = String>> {
+    let mut entries: Vec<_> = std::fs::read_dir(path)
+        .with_context(|| format!("Trying to read: {}", path.display()))?
+        .filter_map(Result::ok)
+        .collect();
 
     entries.sort_by_key(DirEntry::path);
 

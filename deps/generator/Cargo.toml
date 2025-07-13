@@ -1,6 +1,7 @@
 [package]
-edition = "2024"
+edition.workspace = true
 name = "generator"
+version.workspace = true
 
 [lib]
 crate-type = ["rlib", "staticlib"]
@@ -10,5 +11,3 @@ name = "generator"
 Inflector = { workspace = true }
 anyhow = { workspace = true }
 sqlparser = { workspace = true }
-
-sercli_utils = { workspace = true }

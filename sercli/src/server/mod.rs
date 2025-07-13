@@ -8,7 +8,10 @@ mod errors_handling;
 mod handle;
 mod server;
 
-use std::fmt::{Debug, Display, Formatter};
+use std::{
+    fmt::{Debug, Display, Formatter},
+    path::Path,
+};
 
 pub use authorize_request::*;
 pub use authorized_user::*;
@@ -24,18 +27,18 @@ use tokio::task::JoinHandle;
 
 use crate::db::prepare_db;
 
-async fn start_server_async() -> anyhow::Result<()> {
-    prepare_db().await?;
+async fn start_server_async(migrations: impl AsRef<Path> + Send + 'static) -> anyhow::Result<()> {
+    prepare_db(migrations).await?;
 
     Ok(())
 }
 
-pub fn start_server() -> JoinHandle<anyhow::Result<()>> {
+pub fn start_server(migrations: impl AsRef<Path> + Send + 'static) -> JoinHandle<anyhow::Result<()>> {
     if let Ok(runtime) = tokio::runtime::Handle::try_current() {
-        runtime.spawn(start_server_async())
+        runtime.spawn(start_server_async(migrations))
     } else {
         let runtime = tokio::runtime::Runtime::new().unwrap();
-        runtime.spawn(start_server_async())
+        runtime.spawn(start_server_async(migrations))
     }
 }
 

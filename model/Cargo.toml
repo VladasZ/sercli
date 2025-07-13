@@ -1,6 +1,7 @@
 [package]
-edition = "2024"
+edition.workspace = true
 name = "model"
+version.workspace = true
 
 [lib]
 crate-type = ["rlib", "staticlib"]
@@ -8,12 +9,12 @@ name = "model"
 
 [dependencies]
 anyhow = { workspace = true }
+rand = { workspace = true }
 sercli = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
 strum = { workspace = true }
 tokio = { workspace = true }
-rand = { workspace = true }
 
 [build-dependencies]
 anyhow = { workspace = true }

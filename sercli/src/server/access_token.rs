@@ -183,7 +183,7 @@ mod test {
 
     #[tokio::test]
     async fn generate_token() -> Result<()> {
-        let pool = prepare_db().await?;
+        let pool = prepare_db("../model/migrations").await?;
 
         let user = SomeUser {
             id:    0,

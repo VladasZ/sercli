@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "client"
-version = "0.0.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "fake",
@@ -675,11 +675,10 @@ dependencies = [
 
 [[package]]
 name = "generator"
-version = "0.0.0"
+version = "0.2.1"
 dependencies = [
  "Inflector",
  "anyhow",
- "sercli_utils",
  "sqlparser",
 ]
 
@@ -1194,7 +1193,7 @@ dependencies = [
 
 [[package]]
 name = "model"
-version = "0.0.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "rand 0.9.1",
@@ -1881,7 +1880,7 @@ checksum = "1c107b6f4780854c8b126e228ea8869f4d7b71260f962fefb57b996b8959ba6b"
 
 [[package]]
 name = "sercli"
-version = "0.0.0"
+version = "0.2.1"
 dependencies = [
  "Inflector",
  "anyhow",
@@ -1907,7 +1906,7 @@ dependencies = [
 
 [[package]]
 name = "sercli_utils"
-version = "0.0.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "home",
@@ -1982,7 +1981,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.0.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "axum",

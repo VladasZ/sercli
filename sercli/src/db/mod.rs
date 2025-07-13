@@ -1,12 +1,11 @@
 use std::{
-    path::PathBuf,
+    path::Path,
     process::{Command, Stdio},
     time::Duration,
 };
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use generator::Generator;
-use sercli_utils::git_root;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tokio::time::sleep;
 
@@ -32,11 +31,11 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     }
 }
 
-pub fn generate_model() -> Result<()> {
-    Generator::run()
+pub fn generate_model(migrations: impl AsRef<Path>) -> Result<()> {
+    Generator::run(migrations.as_ref())
 }
 
-pub async fn prepare_db() -> Result<PgPool> {
+pub async fn prepare_db(migrations: impl AsRef<Path>) -> Result<PgPool> {
     let conn = if let Ok(conn) = std::env::var("PG_CONNECTION_STRING") {
         conn
     } else {
@@ -49,15 +48,15 @@ pub async fn prepare_db() -> Result<PgPool> {
 
     let pool = open_pool_when_available(&conn).await?;
 
-    let root = if let Ok(root) = git_root() {
-        root
-    } else {
-        PathBuf::from(std::env::var("ROOT_PATH")?)
-    };
+    let migrations = migrations.as_ref();
 
-    let migrations_path = root.join("model/migrations");
-
-    let migrator = Migrator::new(migrations_path).await?;
+    let migrator = Migrator::new(migrations)
+        .await
+        .inspect_err(|err| {
+            dbg!(err);
+            dbg!(std::env::current_dir().unwrap());
+        })
+        .with_context(|| format!("Creating migrator with path: {}", migrations.display()))?;
 
     migrator.run(&pool).await?;
 

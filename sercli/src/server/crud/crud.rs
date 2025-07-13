@@ -120,7 +120,7 @@ mod test {
 
     #[tokio::test]
     async fn test() -> Result<()> {
-        let pool = prepare_db().await?;
+        let pool = prepare_db("../model/migrations").await?;
 
         VaccinatedDog::drop_table(&pool).await?;
 

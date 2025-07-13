@@ -1,6 +1,7 @@
 use std::{
     future::Future,
     net::{Ipv4Addr, SocketAddrV4},
+    path::Path,
 };
 
 use anyhow::Result;
@@ -81,29 +82,39 @@ impl Server {
         self
     }
 
-    pub fn start_blocking(self) -> Result<()> {
+    pub fn start_blocking(self, migrations: impl AsRef<Path>) -> Result<()> {
         let runtime = Runtime::new()?;
-        runtime.block_on(async { self.start_internal(None).await })?;
+        runtime.block_on(async { self.start_internal(migrations, None).await })?;
         Ok(())
     }
 
-    pub async fn spawn(self) -> Result<ServerHandle> {
+    pub async fn spawn(self, migrations: impl AsRef<Path> + Send + 'static) -> Result<ServerHandle> {
         let (se, re) = oneshot::channel();
 
-        self.spawn_internal(se);
+        self.spawn_internal(migrations, se);
 
         let handle = re.await?;
 
         Ok(handle)
     }
 
-    fn spawn_internal(self, started: oneshot::Sender<ServerHandle>) {
+    fn spawn_internal(
+        self,
+        migrations: impl AsRef<Path> + Send + 'static,
+        started: oneshot::Sender<ServerHandle>,
+    ) {
         spawn(async {
-            self.start_internal(started.into()).await.expect("Failed to spawn server");
+            self.start_internal(migrations, started.into())
+                .await
+                .expect("Failed to spawn server");
         });
     }
 
-    async fn start_internal(self, started: Option<oneshot::Sender<ServerHandle>>) -> Result<()> {
+    async fn start_internal(
+        self,
+        migrations: impl AsRef<Path>,
+        started: Option<oneshot::Sender<ServerHandle>>,
+    ) -> Result<()> {
         let port: u16 = if let Ok(port) = std::env::var("SERVER_PORT") {
             port.parse()?
         } else {
@@ -120,7 +131,7 @@ impl Server {
 
         let server = axum::serve(
             listener,
-            self.router.with_state(prepare_db().await?).into_make_service(),
+            self.router.with_state(prepare_db(migrations).await?).into_make_service(),
         )
         .with_graceful_shutdown(receiver);
 
