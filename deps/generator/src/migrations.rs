@@ -42,7 +42,7 @@ impl Migrations {
     }
 
     pub fn mod_code(&self) -> Result<String> {
-        let mut code = "mod model;\npub use model::*;\n".to_string();
+        let mut code = "mod model;\n#[allow(unused_imports)]\npub use model::*;\n".to_string();
 
         for en in self.enums.values() {
             let mod_name = en.name.to_snake_case();
@@ -80,6 +80,8 @@ pub use {mod_name}::*;
 
         Ok(format!(
             r#"
+#![allow(dead_code)]
+
 use anyhow::Result;
 
 pub struct Model;
