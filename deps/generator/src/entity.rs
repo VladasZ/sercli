@@ -42,7 +42,10 @@ impl Entity {
                 column_def,
                 column_position: _,
             } => self.fields.push(column_def.into()),
-            AlterTableOperation::AddConstraint(_) => {}
+            AlterTableOperation::AddConstraint {
+                constraint: _,
+                not_valid: _,
+            } => {}
             _ => unimplemented!("Unsipported alter table operation: {operation}"),
         }
     }
@@ -109,6 +112,7 @@ impl From<ObjectName> for Entity {
 
         let table_name = match part {
             ObjectNamePart::Identifier(ident) => ident.to_string().replace('"', ""),
+            ObjectNamePart::Function(_) => unimplemented!("ObjectNamePart::Function(_)"),
         };
 
         Self {

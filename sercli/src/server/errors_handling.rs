@@ -37,11 +37,11 @@ fn parse_unique_violation<T: Reflected>(err: String) -> String {
 }
 
 fn extract_substring_in(input: &str, symbol: char) -> Option<String> {
-    if let Some(start) = input.find(symbol) {
-        if let Some(end) = input[start + 1..].find(symbol) {
-            let extracted = &input[start + 1..start + 1 + end];
-            return Some(extracted.to_string());
-        }
+    if let Some(start) = input.find(symbol)
+        && let Some(end) = input[start + 1..].find(symbol)
+    {
+        let extracted = &input[start + 1..start + 1 + end];
+        return Some(extracted.to_string());
     }
     None
 }

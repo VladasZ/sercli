@@ -121,7 +121,7 @@ impl Server {
             8000
         };
 
-        let socket = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
+        let socket = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, port);
 
         info!("Starting at: {socket}");
 

@@ -15,7 +15,7 @@ pub trait Crud: Sized + Entity {
 
     async fn any_exists(pool: &PgPool) -> Result<bool>;
 
-    fn get(pool: &PgPool) -> CrudRequest<Self>;
+    fn get(pool: &PgPool) -> CrudRequest<'_, Self>;
 }
 
 impl<T: Entity> Crud for T {
@@ -70,7 +70,7 @@ impl<T: Entity> Crud for T {
         Ok(exists.is_some())
     }
 
-    fn get(pool: &PgPool) -> CrudRequest<Self> {
+    fn get(pool: &PgPool) -> CrudRequest<'_, Self> {
         CrudRequest::new(pool)
     }
 }
