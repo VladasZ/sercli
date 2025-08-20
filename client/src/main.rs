@@ -56,6 +56,7 @@ mod test {
             age:      20,
             password: "prostaf".to_string(),
             birthday: DateTime::parse_from_str(datetime_str, format)?.into(),
+            is_bot:   Some(false),
         };
 
         let (token, _user) = REGISTER.send(peter.clone()).await?;
@@ -87,6 +88,7 @@ mod test {
                 age:      20,
                 password: "prostaf".to_string(),
                 birthday: peter.birthday,
+                is_bot:   Some(false),
             }
         );
 

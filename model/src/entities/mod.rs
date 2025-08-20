@@ -1,4 +1,5 @@
 mod model;
+#[allow(unused_imports)]
 pub use model::*;
 mod wallet_type;
 pub use wallet_type::*;

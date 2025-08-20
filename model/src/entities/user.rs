@@ -23,4 +23,5 @@ pub struct User {
     pub password: String,
     pub age: i32,
     pub birthday: Option<DateTime>,
+    pub is_bot: Option<bool>,
 }

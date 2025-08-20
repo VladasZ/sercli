@@ -1,4 +1,6 @@
 
+#![allow(dead_code)]
+
 use anyhow::Result;
 
 pub struct Model;
