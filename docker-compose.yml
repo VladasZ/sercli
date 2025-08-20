@@ -1,5 +1,5 @@
 services:
-  pg:
+  pg-rw:
     image: postgres:17-alpine
     command: postgres -c max_connections=1000
     environment:

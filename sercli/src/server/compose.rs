@@ -1,6 +1,6 @@
 use std::fs::read_to_string;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use sercli_utils::git_root;
 use serde::Deserialize;
 use serde_yaml::from_str;
@@ -11,8 +11,9 @@ struct ComposeFile {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 struct Services {
-    pg: PgService,
+    pg_rw: PgService,
 }
 
 #[derive(Debug, Deserialize)]
@@ -33,13 +34,13 @@ struct Environment {
 pub fn connection_string_from_compose() -> Result<String> {
     let yaml = read_to_string(git_root()?.join("docker-compose.yml"))?;
 
-    let compose: ComposeFile = from_str(&yaml)?;
+    let compose: ComposeFile = from_str(&yaml).context("Invalid docker-compose.yml")?;
 
-    let user = &compose.services.pg.environment.postgres_user;
-    let password = &compose.services.pg.environment.postgres_password;
-    let db = &compose.services.pg.environment.postgres_db;
+    let user = &compose.services.pg_rw.environment.postgres_user;
+    let password = &compose.services.pg_rw.environment.postgres_password;
+    let db = &compose.services.pg_rw.environment.postgres_db;
 
-    let port_mapping = &compose.services.pg.ports[0];
+    let port_mapping = &compose.services.pg_rw.ports[0];
     let host_port = port_mapping.split(':').next().expect("Invalid port format");
 
     Ok(format!(
