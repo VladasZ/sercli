@@ -52,6 +52,7 @@ fn get_type(ty: &DataType, non_null: bool) -> String {
         DataType::Varchar(_) => "String".into(),
         DataType::SmallInt(_) => "i16".into(),
         DataType::Integer(_) => "i32".into(),
+        DataType::BigInt(_) => "i64".into(),
         DataType::Decimal(_) => "Decimal".into(),
         DataType::Timestamp(_, _) => "DateTime".into(),
         DataType::Real => "f32".into(),

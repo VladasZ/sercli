@@ -68,11 +68,11 @@ pub async fn prepare_db(migrations: impl AsRef<Path>) -> Result<PgPool> {
 pub fn create_migration(path: &str, name: &str) -> Result<()> {
     let timestamp = Utc::now().format("%Y%m%d%H%M%S").to_string();
 
-    let filename = format!("{}/{}_{}.sql", path, timestamp, name);
+    let filename = format!("{path}/{timestamp}_{name}.sql");
 
     File::create(&filename)?;
 
-    println!("Created migration: {}", filename);
+    println!("Created migration: {filename}");
 
     Ok(())
 }
