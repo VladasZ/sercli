@@ -10,7 +10,7 @@ pub use requests::*;
 mod tests {
 
     use anyhow::Result;
-    use sercli::db::prepare_db;
+    use sercli::db::{create_migration, prepare_db};
 
     use crate::Model;
 
@@ -31,5 +31,11 @@ mod tests {
         let pool = prepare_db("../model/migrations").await?;
         Model::drop_all_tables(&pool).await?;
         sercli::db::stop_containers()
+    }
+
+    #[ignore]
+    #[test]
+    fn new_migration() -> Result<()> {
+        create_migration("../model/migrations", "dogs")
     }
 }

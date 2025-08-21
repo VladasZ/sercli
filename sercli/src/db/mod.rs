@@ -1,10 +1,12 @@
 use std::{
+    fs::File,
     path::Path,
     process::{Command, Stdio},
     time::Duration,
 };
 
 use anyhow::{Context, Result, bail};
+use chrono::Utc;
 use generator::Generator;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tokio::time::sleep;
@@ -61,6 +63,18 @@ pub async fn prepare_db(migrations: impl AsRef<Path>) -> Result<PgPool> {
     migrator.run(&pool).await?;
 
     Ok(pool)
+}
+
+pub fn create_migration(path: &str, name: &str) -> Result<()> {
+    let timestamp = Utc::now().format("%Y%m%d%H%M%S").to_string();
+
+    let filename = format!("{}/{}_{}.sql", path, timestamp, name);
+
+    File::create(&filename)?;
+
+    println!("Created migration: {}", filename);
+
+    Ok(())
 }
 
 pub fn stop_containers() -> Result<()> {
