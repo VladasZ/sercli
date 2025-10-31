@@ -7,6 +7,7 @@ mod user;
 pub use axum::{Json, extract::State, http::HeaderMap};
 pub use chrono::{Duration, NaiveDateTime as DateTime, Utc};
 pub use password::{check_password, hash_password};
+pub use sercli_utils::git_root;
 pub use server::{
     connection_string_from_compose,
     crud::{Crud, FieldExtension},

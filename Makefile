@@ -21,6 +21,7 @@ lint:
       -A clippy::return_self_not_must_use \
       -A clippy::module_inception \
       -A clippy::manual_assert \
+      -A clippy::mismatched_lifetime_syntaxes \
       \
       -D warnings
 
