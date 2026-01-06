@@ -18,7 +18,7 @@ pub use user::SercliUser;
 pub use crate::server::crud::Entity;
 
 pub mod reflected {
-    pub use reflected::{Field, Reflected, ToReflectedString, ToReflectedVal, Type};
+    pub use reflected::{Field, RandomReflected, Reflected, ToReflectedString, ToReflectedVal, Type};
 }
 
 pub mod axum {

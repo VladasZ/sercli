@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use rand::prelude::IndexedRandom;
-use sercli::{Crud, db::prepare_db, reflected::Reflected};
+use sercli::{Crud, db::prepare_db, reflected::RandomReflected};
 
 use crate::{Dog, User, Wallet};
 

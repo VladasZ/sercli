@@ -112,7 +112,7 @@ impl From<ObjectName> for Entity {
 
         let table_name = match part {
             ObjectNamePart::Identifier(ident) => ident.to_string().replace('"', ""),
-            ObjectNamePart::Function(_) => unimplemented!("ObjectNamePart::Function(_)"),
+            ObjectNamePart::Function(_) => unimplemented!(),
         };
 
         Self {

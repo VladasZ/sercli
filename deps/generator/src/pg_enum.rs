@@ -61,7 +61,9 @@ impl sercli::reflected::ToReflectedVal<{name}> for &str {{
         format!("{}.rs", self.name.to_snake_case()).into()
     }
 
-    fn parse_cases(repr: UserDefinedTypeRepresentation) -> Vec<String> {
+    fn parse_cases(repr: Option<UserDefinedTypeRepresentation>) -> Vec<String> {
+        let Some(repr) = repr else { return vec![] };
+
         let UserDefinedTypeRepresentation::Enum { labels } = repr else {
             panic!("Unsupported enum representation: {repr}")
         };
@@ -70,8 +72,8 @@ impl sercli::reflected::ToReflectedVal<{name}> for &str {{
     }
 }
 
-impl From<(ObjectName, UserDefinedTypeRepresentation)> for PgEnum {
-    fn from(value: (ObjectName, UserDefinedTypeRepresentation)) -> Self {
+impl From<(ObjectName, Option<UserDefinedTypeRepresentation>)> for PgEnum {
+    fn from(value: (ObjectName, Option<UserDefinedTypeRepresentation>)) -> Self {
         let table_name = format!("{}", value.0);
 
         Self {

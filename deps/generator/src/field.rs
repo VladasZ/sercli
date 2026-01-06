@@ -56,8 +56,11 @@ fn get_type(ty: &DataType, non_null: bool) -> String {
         DataType::Decimal(_) => "Decimal".into(),
         DataType::Timestamp(_, _) => "DateTime".into(),
         DataType::Real => "f32".into(),
-        DataType::Interval => "Duration".into(),
         DataType::Bool | DataType::Boolean => "bool".into(),
+        DataType::Interval {
+            fields: _,
+            precision: _,
+        } => "Duration".into(),
         _ => panic!("Unsupported date type: {ty:?}"),
     };
 

@@ -78,7 +78,7 @@ impl<T: Entity> Crud for T {
 #[cfg(test)]
 mod test {
     use anyhow::Result;
-    use reflected::{Reflected, ToReflectedVal};
+    use reflected::{RandomReflected, Reflected, ToReflectedVal};
     use sqlx::FromRow;
 
     use crate::{

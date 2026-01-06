@@ -118,15 +118,14 @@ impl Model {{
     fn process_statement(&mut self, statement: Statement) {
         match statement {
             Statement::CreateTable(create) => self.process_create_table(create),
-            Statement::AlterTable {
-                name,
-                if_exists,
-                only,
-                operations,
-                location,
-                on_cluster,
-                iceberg: _,
-            } => self.process_alter_table(name, if_exists, only, operations, location, on_cluster),
+            Statement::AlterTable(alter) => self.process_alter_table(
+                alter.name,
+                alter.if_exists,
+                alter.only,
+                alter.operations,
+                alter.location,
+                alter.on_cluster,
+            ),
             Statement::CreateType { name, representation } => self.process_create_type(name, representation),
             Statement::CreateIndex(_) => (),
             _ => unimplemented!("Unsupported statement: {statement:?}"),
@@ -163,7 +162,11 @@ impl Migrations {
         existing_entity.process_alter_table_operations(operations);
     }
 
-    fn process_create_type(&mut self, name: ObjectName, representation: UserDefinedTypeRepresentation) {
+    fn process_create_type(
+        &mut self,
+        name: ObjectName,
+        representation: Option<UserDefinedTypeRepresentation>,
+    ) {
         let en: PgEnum = (name, representation).into();
 
         self.enums.insert(en.name.clone(), en);
