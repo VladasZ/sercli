@@ -1,6 +1,6 @@
 use anyhow::Result;
 use model::GET_USERS;
-use sercli::client::API;
+use sercli::client::RestAPI;
 use server::make_server;
 
 #[tokio::main]
@@ -9,7 +9,7 @@ async fn main() -> Result<()> {
 
     dbg!(&handle);
 
-    API::init("http://localhost:8000");
+    RestAPI::init("http://localhost:8000");
 
     let users = GET_USERS.await?;
 
@@ -27,7 +27,7 @@ mod test {
     use model::{
         CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet, WalletType,
     };
-    use sercli::{DateTime, Decimal, client::API};
+    use sercli::{DateTime, Decimal, client::RestAPI};
     use server::make_server;
 
     #[tokio::test]
@@ -36,7 +36,7 @@ mod test {
 
         let _handle = make_server().spawn("../model/migrations").await?;
 
-        API::init("http://localhost:8000");
+        RestAPI::init("http://localhost:8000");
 
         let error = NON_EXISTING_ENDPOINT
             .await
@@ -61,7 +61,7 @@ mod test {
 
         let (token, _user) = REGISTER.send(peter.clone()).await?;
 
-        API::set_access_token(token);
+        RestAPI::set_access_token(token);
 
         let error = REGISTER
             .send(peter.clone())

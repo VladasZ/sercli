@@ -1,4 +1,3 @@
-pub mod client;
 pub mod db;
 mod password;
 pub mod server;
@@ -19,6 +18,10 @@ pub use crate::server::crud::Entity;
 
 pub mod reflected {
     pub use reflected::{Field, RandomReflected, Reflected, ToReflectedString, ToReflectedVal, Type};
+}
+
+pub mod client {
+    pub use netrun::rest::*;
 }
 
 pub mod axum {
