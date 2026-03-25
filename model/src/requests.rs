@@ -1,11 +1,13 @@
-use sercli::client::Request;
+use sercli::client::{Request, RestAPI};
 
 use crate::{Wallet, entities::User};
 
-pub const REGISTER: Request<User, (String, User)> = Request::new("register");
-pub const GET_USERS: Request<(), Vec<User>> = Request::new("get_users");
+pub static API: RestAPI = RestAPI::new("http://localhost:8000");
 
-pub const CREATE_WALLET: Request<Wallet, Wallet> = Request::new("create_wallet");
-pub const GET_WALLETS: Request<(), Vec<Wallet>> = Request::new("get_wallets");
+pub const REGISTER: Request<User, (String, User)> = API.request("register");
+pub const GET_USERS: Request<(), Vec<User>> = API.request("get_users");
 
-pub const NON_EXISTING_ENDPOINT: Request<(), ()> = Request::new("non_existing_endpoint");
+pub const CREATE_WALLET: Request<Wallet, Wallet> = API.request("create_wallet");
+pub const GET_WALLETS: Request<(), Vec<Wallet>> = API.request("get_wallets");
+
+pub const NON_EXISTING_ENDPOINT: Request<(), ()> = API.request("non_existing_endpoint");

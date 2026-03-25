@@ -1,6 +1,5 @@
 use anyhow::Result;
 use model::GET_USERS;
-use sercli::client::RestAPI;
 use server::make_server;
 
 #[tokio::main]
@@ -8,8 +7,6 @@ async fn main() -> Result<()> {
     let handle = make_server().spawn("model/migrations").await?;
 
     dbg!(&handle);
-
-    RestAPI::init("http://localhost:8000");
 
     let users = GET_USERS.await?;
 
@@ -25,9 +22,9 @@ mod test {
     use anyhow::Result;
     use fake::{Fake, faker::internet::en::FreeEmail};
     use model::{
-        CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet, WalletType,
+        API, CREATE_WALLET, GET_USERS, GET_WALLETS, NON_EXISTING_ENDPOINT, REGISTER, User, Wallet, WalletType,
     };
-    use sercli::{DateTime, Decimal, client::RestAPI};
+    use sercli::{DateTime, Decimal};
     use server::make_server;
 
     #[tokio::test]
@@ -35,8 +32,6 @@ mod test {
         static EMAIL: OnceLock<String> = OnceLock::new();
 
         let _handle = make_server().spawn("../model/migrations").await?;
-
-        RestAPI::init("http://localhost:8000");
 
         let error = NON_EXISTING_ENDPOINT
             .await
@@ -51,17 +46,16 @@ mod test {
         let format = "%Y-%m-%d %H:%M:%S";
 
         let peter = User {
-            id:       0,
-            email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
-            age:      20,
+            id: 0,
+            email: EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
+            age: 20,
             password: "prostaf".to_string(),
             birthday: DateTime::parse_from_str(datetime_str, format)?.into(),
-            is_bot:   Some(false),
+            is_bot: Some(false),
         };
 
         let (token, _user) = REGISTER.send(peter.clone()).await?;
-
-        RestAPI::set_access_token(token);
+        API.set_access_token(token);
 
         let error = REGISTER
             .send(peter.clone())
@@ -74,7 +68,7 @@ mod test {
              constraint \"users_email_key\""
         );
 
-        let users = GET_USERS.await?;
+        let users = dbg!(GET_USERS.await)?;
 
         let Some(user) = users.into_iter().find(|user| user.email == *EMAIL.get().unwrap()) else {
             panic!("Created user not found");
@@ -83,21 +77,21 @@ mod test {
         assert_eq!(
             user,
             User {
-                id:       user.id,
-                email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
-                age:      20,
+                id: user.id,
+                email: EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
+                age: 20,
                 password: "prostaf".to_string(),
                 birthday: peter.birthday,
-                is_bot:   Some(false),
+                is_bot: Some(false),
             }
         );
 
         let wallet = Wallet {
-            id:      0,
+            id: 0,
             user_id: 0,
-            name:    "Money".to_string(),
-            amount:  Decimal::from_str("1050.25")?,
-            tp:      WalletType::Crypto,
+            name: "Money".to_string(),
+            amount: Decimal::from_str("1050.25")?,
+            tp: WalletType::Crypto,
         };
 
         let wallet = CREATE_WALLET.send(wallet).await?;

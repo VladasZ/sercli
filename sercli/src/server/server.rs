@@ -5,7 +5,12 @@ use std::{
 };
 
 use anyhow::Result;
-use axum::{Json, Router, extract::State, handler::Handler, routing::get};
+use axum::{
+    Json, Router,
+    extract::State,
+    handler::Handler,
+    routing::{get, post},
+};
 use log::info;
 use serde::{Serialize, de::DeserializeOwned};
 use sqlx::PgPool;
@@ -42,7 +47,7 @@ impl Server {
         request: &'static Request<In, Out>,
         method: fn(State<PgPool>, Json<In>) -> F,
     ) -> Self {
-        self.router = self.router.route(&format!("/{}", request.name), get(method));
+        self.router = self.router.route(&format!("/{}", request.path()), get(method));
         self
     }
 
@@ -60,7 +65,12 @@ impl Server {
     where
         fn(AuthorizeRequest<User>, State<PgPool>, _: Json<In>) -> F: Handler<T, PgPool>,
     {
-        self.router = self.router.route(&format!("/{}", request.name), get(method));
+        let method = if size_of::<In>() == 0 {
+            get(method)
+        } else {
+            post(method)
+        };
+        self.router = self.router.route(&format!("/{}", request.path()), method);
         self
     }
 
@@ -78,7 +88,12 @@ impl Server {
     where
         fn(AuthorizedUser<User>, State<PgPool>, _: Json<In>) -> F: Handler<T, PgPool>,
     {
-        self.router = self.router.route(&format!("/{}", request.name), get(method));
+        let method = if size_of::<In>() == 0 {
+            get(method)
+        } else {
+            post(method)
+        };
+        self.router = self.router.route(&format!("/{}", request.path()), method);
         self
     }
 
