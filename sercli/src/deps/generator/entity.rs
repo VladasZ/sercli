@@ -8,7 +8,7 @@ use anyhow::Result;
 use inflector::{Inflector, string::singularize::to_singular};
 use sqlparser::ast::{AlterTableOperation, CreateTable, ObjectName, ObjectNamePart};
 
-use crate::field::Field;
+use crate::deps::generator::field::Field;
 
 #[derive(Debug, PartialEq)]
 pub struct Entity {

@@ -16,7 +16,7 @@ use sqlparser::{
     parser::Parser,
 };
 
-use crate::{entity::Entity, pg_enum::PgEnum};
+use crate::deps::generator::{entity::Entity, pg_enum::PgEnum};
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 

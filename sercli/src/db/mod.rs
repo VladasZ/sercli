@@ -7,11 +7,10 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use chrono::Utc;
-use generator::Generator;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tokio::time::sleep;
 
-use crate::connection_string_from_compose;
+use crate::{connection_string_from_compose, deps::generator::Generator};
 
 async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     let mut pool: sqlx::Result<PgPool>;

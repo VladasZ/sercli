@@ -26,13 +26,18 @@ mod test {
     fn test() -> Result<()> {
         assert_eq!("sercli", git_root()?.iter().last().unwrap());
 
+        let original_dir = env::current_dir()?;
         let home_dir = home::home_dir().ok_or(anyhow!("No HOME"))?;
 
         env::set_current_dir(&home_dir)?;
 
+        let result = git_root();
+
+        env::set_current_dir(original_dir)?;
+
         assert_eq!(
             anyhow!("Failed to get Git repository root path").to_string(),
-            git_root().err().unwrap().to_string()
+            result.err().unwrap().to_string()
         );
 
         Ok(())

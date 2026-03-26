@@ -65,12 +65,7 @@ impl Server {
     where
         fn(AuthorizeRequest<User>, State<PgPool>, _: Json<In>) -> F: Handler<T, PgPool>,
     {
-        let method = if size_of::<In>() == 0 {
-            get(method)
-        } else {
-            post(method)
-        };
-        self.router = self.router.route(&format!("/{}", request.path()), method);
+        self.router = self.router.route(&format!("/{}", request.path()), post(method));
         self
     }
 
@@ -88,12 +83,7 @@ impl Server {
     where
         fn(AuthorizedUser<User>, State<PgPool>, _: Json<In>) -> F: Handler<T, PgPool>,
     {
-        let method = if size_of::<In>() == 0 {
-            get(method)
-        } else {
-            post(method)
-        };
-        self.router = self.router.route(&format!("/{}", request.path()), method);
+        self.router = self.router.route(&format!("/{}", request.path()), post(method));
         self
     }
 

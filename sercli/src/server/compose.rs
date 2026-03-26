@@ -1,9 +1,10 @@
 use std::fs::read_to_string;
 
 use anyhow::{Context, Result};
-use sercli_utils::git_root;
 use serde::Deserialize;
 use serde_yaml::from_str;
+
+use crate::deps::utils::git_root;
 
 #[derive(Debug, Deserialize)]
 struct ComposeFile {

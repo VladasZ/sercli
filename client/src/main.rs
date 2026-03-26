@@ -46,12 +46,12 @@ mod test {
         let format = "%Y-%m-%d %H:%M:%S";
 
         let peter = User {
-            id: 0,
-            email: EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
-            age: 20,
+            id:       0,
+            email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
+            age:      20,
             password: "prostaf".to_string(),
             birthday: DateTime::parse_from_str(datetime_str, format)?.into(),
-            is_bot: Some(false),
+            is_bot:   Some(false),
         };
 
         let (token, _user) = REGISTER.send(peter.clone()).await?;
@@ -64,11 +64,11 @@ mod test {
 
         assert_eq!(
             format!("{error}"),
-            "Something went wrong: error returned from database: duplicate key value violates unique \
-             constraint \"users_email_key\""
+            "[500 Internal Server Error] Something went wrong: error returned from database: duplicate key \
+             value violates unique constraint \"users_email_key\""
         );
 
-        let users = dbg!(GET_USERS.await)?;
+        let users = GET_USERS.await?;
 
         let Some(user) = users.into_iter().find(|user| user.email == *EMAIL.get().unwrap()) else {
             panic!("Created user not found");
@@ -77,21 +77,21 @@ mod test {
         assert_eq!(
             user,
             User {
-                id: user.id,
-                email: EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
-                age: 20,
+                id:       user.id,
+                email:    EMAIL.get_or_init(|| FreeEmail().fake::<String>()).clone(),
+                age:      20,
                 password: "prostaf".to_string(),
                 birthday: peter.birthday,
-                is_bot: Some(false),
+                is_bot:   Some(false),
             }
         );
 
         let wallet = Wallet {
-            id: 0,
+            id:      0,
             user_id: 0,
-            name: "Money".to_string(),
-            amount: Decimal::from_str("1050.25")?,
-            tp: WalletType::Crypto,
+            name:    "Money".to_string(),
+            amount:  Decimal::from_str("1050.25")?,
+            tp:      WalletType::Crypto,
         };
 
         let wallet = CREATE_WALLET.send(wallet).await?;

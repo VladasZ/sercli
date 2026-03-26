@@ -8,7 +8,7 @@ use anyhow::Result;
 use inflector::Inflector;
 use sqlparser::ast::{ObjectName, UserDefinedTypeRepresentation};
 
-use crate::entity::name_to_table_name;
+use crate::deps::generator::entity::name_to_table_name;
 
 pub struct PgEnum {
     pub name:       String,

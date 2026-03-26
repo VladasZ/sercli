@@ -521,7 +521,7 @@ dependencies = [
 
 [[package]]
 name = "client"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "fake",
@@ -1072,15 +1072,6 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "slab",
-]
-
-[[package]]
-name = "generator"
-version = "0.2.1"
-dependencies = [
- "Inflector",
- "anyhow",
- "sqlparser",
 ]
 
 [[package]]
@@ -1828,7 +1819,7 @@ dependencies = [
 
 [[package]]
 name = "model"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "rand 0.10.0",
@@ -1870,9 +1861,9 @@ dependencies = [
 
 [[package]]
 name = "netrun"
-version = "0.34.0"
+version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad1e9fde5d05cd3552d13940f3cdfbf8a168a854b32aebfd0a6cada6148e2de5"
+checksum = "e71be16d58352a77d82a83ed7fb277f7acad54208b1cb53886785654aa47bf1b"
 dependencies = [
  "anyhow",
  "byte-unit",
@@ -2942,7 +2933,7 @@ checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 
 [[package]]
 name = "sercli"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "Inflector",
  "anyhow",
@@ -2951,26 +2942,18 @@ dependencies = [
  "chrono",
  "derive_more",
  "fake",
- "generator",
+ "home",
  "log",
  "netrun",
  "pasetors",
  "reflected",
  "rust_decimal",
- "sercli_utils",
  "serde",
  "serde_yaml",
+ "sqlparser",
  "sqlx",
  "strum",
  "tokio",
-]
-
-[[package]]
-name = "sercli_utils"
-version = "0.2.1"
-dependencies = [
- "anyhow",
- "home",
 ]
 
 [[package]]
@@ -3054,7 +3037,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "axum",

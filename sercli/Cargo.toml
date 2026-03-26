@@ -32,5 +32,5 @@ tokio = { workspace = true }
 
 netrun = { workspace = true }
 
-generator = { workspace = true }
-sercli_utils = { workspace = true }
+home = { workspace = true }
+sqlparser = { workspace = true }

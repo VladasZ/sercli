@@ -2,7 +2,7 @@ use std::{fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 
-use crate::migrations::Migrations;
+use crate::deps::generator::migrations::Migrations;
 
 pub struct Generator {}
 
