@@ -10,6 +10,7 @@ use sqlparser::ast::{ObjectName, UserDefinedTypeRepresentation};
 
 use crate::deps::generator::entity::name_to_table_name;
 
+#[derive(Debug)]
 pub struct PgEnum {
     pub name:       String,
     pub table_name: String,

@@ -6,15 +6,16 @@ use std::{
 
 use anyhow::Result;
 use inflector::{Inflector, string::singularize::to_singular};
-use sqlparser::ast::{AlterTableOperation, CreateTable, ObjectName, ObjectNamePart};
+use sqlparser::ast::{AlterTableOperation, CreateTable, ObjectName, ObjectNamePart, TableConstraint};
 
-use crate::deps::generator::field::Field;
+use crate::deps::generator::{field::Field, relation::Relation};
 
 #[derive(Debug, PartialEq)]
 pub struct Entity {
     pub name:       String,
     pub table_name: String,
     pub fields:     Vec<Field>,
+    pub relations:  Vec<Relation>,
 }
 
 impl Entity {
@@ -43,9 +44,19 @@ impl Entity {
                 column_position: _,
             } => self.fields.push(column_def.into()),
             AlterTableOperation::AddConstraint {
-                constraint: _,
+                constraint,
                 not_valid: _,
-            } => {}
+            } => {
+                if let TableConstraint::ForeignKey(fk) = constraint {
+                    let foreign_table = format!("{}", fk.foreign_table).replace('"', "");
+                    for col in fk.columns {
+                        self.relations.push(Relation {
+                            field:      col.value,
+                            references: name_to_table_name(&foreign_table),
+                        });
+                    }
+                }
+            }
             _ => unimplemented!("Unsipported alter table operation: {operation}"),
         }
     }
@@ -98,6 +109,7 @@ impl From<CreateTable> for Entity {
             name: name_to_table_name(&table_name),
             table_name,
             fields: value.columns.into_iter().map(Into::into).collect(),
+            relations: vec![],
         }
     }
 }
@@ -119,6 +131,7 @@ impl From<ObjectName> for Entity {
             name: name_to_table_name(&table_name),
             table_name,
             fields: vec![],
+            relations: vec![],
         }
     }
 }

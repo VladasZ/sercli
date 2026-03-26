@@ -1,5 +1,5 @@
 pub mod db;
-pub mod deps;
+mod deps;
 mod password;
 pub mod server;
 mod user;
@@ -29,6 +29,7 @@ pub mod axum {
     pub use axum::*;
 }
 
+pub use deps::generator::Migrations;
 pub use rust_decimal::Decimal;
 
 pub type ID = i32;

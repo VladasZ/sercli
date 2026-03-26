@@ -20,6 +20,7 @@ use crate::deps::generator::{entity::Entity, pg_enum::PgEnum};
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
+#[derive(Debug)]
 pub struct Migrations {
     pub entities: BTreeMap<String, Entity>,
     pub enums:    BTreeMap<String, PgEnum>,
@@ -28,7 +29,17 @@ pub struct Migrations {
 impl Migrations {}
 
 impl Migrations {
-    pub fn get(path: &Path) -> Result<Self> {
+    pub fn get(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
+        let expanded;
+        let path = if let Ok(rest) = path.strip_prefix("~") {
+            let home = std::env::var("HOME").context("No HOME")?;
+            expanded = Path::new(&home).join(rest);
+            expanded.as_path()
+        } else {
+            path
+        };
+
         let mut migrations = Self {
             entities: BTreeMap::default(),
             enums:    BTreeMap::default(),
@@ -173,7 +184,9 @@ impl Migrations {
     }
 }
 
-fn get_sql(path: &Path) -> Result<impl Iterator<Item = String>> {
+fn get_sql(path: impl AsRef<Path>) -> Result<impl Iterator<Item = String>> {
+    let path = path.as_ref();
+
     let mut entries: Vec<_> = std::fs::read_dir(path)
         .with_context(|| format!("Trying to read: {}", path.display()))?
         .filter_map(Result::ok)
@@ -196,7 +209,38 @@ fn get_sql(path: &Path) -> Result<impl Iterator<Item = String>> {
 
 #[cfg(test)]
 mod test {
-    // use crate::{entity::Entity, field::Field, migrations::Migrations};
+    use super::*;
+    use crate::deps::generator::relation::Relation;
+
+    #[test]
+    fn parses_relations() -> anyhow::Result<()> {
+        let mut migrations = Migrations {
+            entities: BTreeMap::default(),
+            enums:    BTreeMap::default(),
+        };
+
+        migrations.process_migration(
+            r#"
+            CREATE TABLE "users" ("telegram_id" bigint NOT NULL);
+            CREATE TABLE "posts" ("id" bigint NOT NULL, "user_id" bigint NOT NULL);
+            ALTER TABLE "posts" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("telegram_id");
+            "#,
+        )?;
+
+        let post = migrations.entities.get("Post").expect("Post entity not found");
+        assert_eq!(
+            post.relations,
+            vec![Relation {
+                field:      "user_id".into(),
+                references: "User".into(),
+            }]
+        );
+
+        let user = migrations.entities.get("User").expect("User entity not found");
+        assert!(user.relations.is_empty());
+
+        Ok(())
+    }
 
     #[test]
     fn entities() -> anyhow::Result<()> {
