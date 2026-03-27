@@ -105,6 +105,7 @@ impl Entity {
 
         format!(
             r"
+#![allow(dead_code)]
 #[allow(unused_imports)]
 #[allow(clippy::wildcard_imports)]
 use sercli::*;
