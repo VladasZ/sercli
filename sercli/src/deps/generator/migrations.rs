@@ -16,7 +16,7 @@ use sqlparser::{
     parser::Parser,
 };
 
-use crate::deps::generator::{entity::Entity, pg_enum::PgEnum};
+use crate::deps::generator::{entity::Entity, pg_enum::PgEnum, relation::InverseRelation};
 
 const DIALECT: PostgreSqlDialect = PostgreSqlDialect {};
 
@@ -26,7 +26,42 @@ pub struct Migrations {
     pub enums:    BTreeMap<String, PgEnum>,
 }
 
-impl Migrations {}
+impl Migrations {
+    fn build_inverse_relations(&mut self) {
+        let mut inverse: Vec<(String, InverseRelation)> = vec![];
+
+        for entity in self.entities.values() {
+            for rel in &entity.relations {
+                let existing = inverse
+                    .iter()
+                    .find(|(parent, inv)| parent == &rel.references && inv.table_name == entity.table_name);
+
+                if existing.is_some() {
+                    panic!(
+                        "Multiple FK columns from '{}' reference '{}' — ambiguous relation method name '{}'",
+                        entity.name, rel.references, entity.table_name
+                    );
+                }
+
+                inverse.push((
+                    rel.references.clone(),
+                    InverseRelation {
+                        table_name:  entity.table_name.clone(),
+                        entity_name: entity.name.clone(),
+                        fk_field:    rel.field.clone(),
+                        local_field: rel.references_field.clone(),
+                    },
+                ));
+            }
+        }
+
+        for (parent_name, inv_rel) in inverse {
+            if let Some(parent) = self.entities.get_mut(&parent_name) {
+                parent.inverse_relations.push(inv_rel);
+            }
+        }
+    }
+}
 
 impl Migrations {
     pub fn get(path: impl AsRef<Path>) -> Result<Self> {
@@ -48,6 +83,8 @@ impl Migrations {
         for sql in get_sql(path)? {
             migrations.process_migration(&sql)?;
         }
+
+        migrations.build_inverse_relations();
 
         Ok(migrations)
     }
@@ -231,8 +268,9 @@ mod test {
         assert_eq!(
             post.relations,
             vec![Relation {
-                field:      "user_id".into(),
-                references: "User".into(),
+                field:            "user_id".into(),
+                references:       "User".into(),
+                references_field: "telegram_id".into(),
             }]
         );
 

@@ -6,7 +6,7 @@ resolver = "3"
 
 [workspace.package]
 edition = "2024"
-version = "0.4.0"
+version = "0.5.0"
 
 [workspace.metadata.cargo-machete]
 ignored = []
@@ -28,18 +28,9 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 sqlparser = "0.61"
-sqlx = { version = "0.8", features = [
-    "chrono",
-    "postgres",
-    "runtime-tokio-rustls",
-    "rust_decimal",
-] }
+sqlx = { version = "0.8", features = ["chrono", "postgres", "runtime-tokio-rustls", "rust_decimal"] }
 strum = { version = "0.28", features = ["derive", "strum_macros"] }
-tokio = { version = "1.50", features = [
-    "macros",
-    "rt-multi-thread",
-    "tracing",
-] }
+tokio = { version = "1.50", features = ["macros", "rt-multi-thread", "tracing"] }
 
 netrun = "0.35.0"
 # netrun = { path = "../netrun/netrun" }

@@ -8,14 +8,18 @@ use anyhow::Result;
 use inflector::{Inflector, string::singularize::to_singular};
 use sqlparser::ast::{AlterTableOperation, CreateTable, ObjectName, ObjectNamePart, TableConstraint};
 
-use crate::deps::generator::{field::Field, relation::Relation};
+use crate::deps::generator::{
+    field::Field,
+    relation::{InverseRelation, Relation},
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Entity {
-    pub name:       String,
-    pub table_name: String,
-    pub fields:     Vec<Field>,
-    pub relations:  Vec<Relation>,
+    pub name:              String,
+    pub table_name:        String,
+    pub fields:            Vec<Field>,
+    pub relations:         Vec<Relation>,
+    pub inverse_relations: Vec<InverseRelation>,
 }
 
 impl Entity {
@@ -49,10 +53,11 @@ impl Entity {
             } => {
                 if let TableConstraint::ForeignKey(fk) = constraint {
                     let foreign_table = format!("{}", fk.foreign_table).replace('"', "");
-                    for col in fk.columns {
+                    for (col, ref_col) in fk.columns.into_iter().zip(fk.referred_columns.into_iter()) {
                         self.relations.push(Relation {
-                            field:      col.value,
-                            references: name_to_table_name(&foreign_table),
+                            field:            col.value,
+                            references:       name_to_table_name(&foreign_table),
+                            references_field: ref_col.value,
                         });
                     }
                 }
@@ -70,12 +75,40 @@ impl Entity {
             fields.push_str(&field.to_code());
         }
 
+        let mut relation_imports = String::new();
+        let mut relation_methods = String::new();
+
+        for inv in &self.inverse_relations {
+            let method_name = &inv.table_name;
+            let entity_name = &inv.entity_name;
+            let fk_field = &inv.fk_field;
+            let local_field = &inv.local_field;
+
+            relation_imports.push_str(&format!("use crate::{entity_name};\n"));
+            relation_methods.push_str(&format!(
+                r#"
+    pub async fn {method_name}(&self, pool: &sqlx::PgPool) -> anyhow::Result<Vec<{entity_name}>> {{
+        Ok(sqlx::query_as("SELECT * FROM {method_name} WHERE {fk_field} = $1")
+            .bind(self.{local_field})
+            .fetch_all(pool)
+            .await?)
+    }}
+"#
+            ));
+        }
+
+        let impl_block = if relation_methods.is_empty() {
+            String::new()
+        } else {
+            format!("\nimpl {name} {{{relation_methods}}}\n")
+        };
+
         format!(
             r"
 #[allow(unused_imports)]
 #[allow(clippy::wildcard_imports)]
 use sercli::*;
-
+{relation_imports}
 mod reflected {{
     pub use sercli::reflected::*;
 }}
@@ -91,8 +124,7 @@ mod reflected {{
     sqlx::FromRow,
 )]
 pub struct {name} {{
-{fields}}}
-"
+{fields}}}{impl_block}"
         )
     }
 
@@ -110,6 +142,7 @@ impl From<CreateTable> for Entity {
             table_name,
             fields: value.columns.into_iter().map(Into::into).collect(),
             relations: vec![],
+            inverse_relations: vec![],
         }
     }
 }
@@ -132,6 +165,7 @@ impl From<ObjectName> for Entity {
             table_name,
             fields: vec![],
             relations: vec![],
+            inverse_relations: vec![],
         }
     }
 }
