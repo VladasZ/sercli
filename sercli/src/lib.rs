@@ -10,7 +10,7 @@ pub use deps::utils::git_root;
 pub use password::{check_password, hash_password};
 pub use server::{
     connection_string_from_compose,
-    crud::{Crud, FieldExtension},
+    crud::{Crud, CrudRequest, FieldExtension},
     db_storage::DBStorage,
 };
 pub use user::SercliUser;

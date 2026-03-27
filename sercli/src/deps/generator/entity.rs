@@ -84,16 +84,15 @@ impl Entity {
             let fk_field = &inv.fk_field;
             let local_field = &inv.local_field;
 
+            let fk_const = fk_field.to_uppercase();
+
             relation_imports.push_str(&format!("use crate::{entity_name};\n"));
             relation_methods.push_str(&format!(
-                r#"
-    pub async fn {method_name}(&self, pool: &sqlx::PgPool) -> anyhow::Result<Vec<{entity_name}>> {{
-        Ok(sqlx::query_as("SELECT * FROM {method_name} WHERE {fk_field} = $1")
-            .bind(self.{local_field})
-            .fetch_all(pool)
-            .await?)
+                r"
+    pub fn {method_name}<'a>(&self, pool: &'a sqlx::PgPool) -> CrudRequest<'a, {entity_name}> {{
+        {entity_name}::get(pool).with({entity_name}::{fk_const}, self.{local_field})
     }}
-"#
+"
             ));
         }
 

@@ -28,10 +28,7 @@ pub struct User {
     pub is_bot: Option<bool>,
 }
 impl User {
-    pub async fn wallets(&self, pool: &sqlx::PgPool) -> anyhow::Result<Vec<Wallet>> {
-        Ok(sqlx::query_as("SELECT * FROM wallets WHERE user_id = $1")
-            .bind(self.id)
-            .fetch_all(pool)
-            .await?)
+    pub fn wallets<'a>(&self, pool: &'a sqlx::PgPool) -> CrudRequest<'a, Wallet> {
+        Wallet::get(pool).with(Wallet::USER_ID, self.id)
     }
 }
