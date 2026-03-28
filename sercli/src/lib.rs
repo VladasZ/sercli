@@ -32,4 +32,4 @@ pub mod axum {
 pub use deps::generator::Migrations;
 pub use rust_decimal::Decimal;
 
-pub type ID = i32;
+pub type ID = i64;

@@ -10,7 +10,7 @@ pub trait Crud: Sized + Entity {
 
     async fn insert(self, pool: &PgPool) -> Result<Self>;
     async fn get_all(pool: &PgPool) -> Result<Vec<Self>>;
-    async fn with_id(id: i32, pool: &PgPool) -> Result<Self>;
+    async fn with_id(id: ID, pool: &PgPool) -> Result<Self>;
     async fn delete(self, pool: &PgPool) -> Result<()>;
 
     async fn any_exists(pool: &PgPool) -> Result<bool>;
@@ -114,7 +114,7 @@ mod test {
 
     #[derive(Debug, Clone, Default, PartialEq, Reflected, FromRow)]
     struct VaccinatedDog {
-        id:     i32,
+        id:     i64,
         name:   String,
         age:    i32,
         weight: f32,

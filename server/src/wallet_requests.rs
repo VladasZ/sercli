@@ -15,7 +15,7 @@ pub async fn create_wallet(
 
     wallet.user_id = user.id;
 
-    let wallet = wallet.insert(&db).await?;
+    let wallet = dbg!(wallet.insert(&db).await)?;
 
     Ok(Json(wallet))
 }

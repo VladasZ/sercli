@@ -21,7 +21,7 @@ impl From<ColumnDef> for Field {
             .any(|option| matches!(option.option, ColumnOption::NotNull));
 
         let ty = get_type(
-            &value.data_type,
+            &value,
             non_null || value.name.to_string().replace('"', "") == "id",
         );
 
@@ -32,8 +32,14 @@ impl From<ColumnDef> for Field {
     }
 }
 
-fn get_type(ty: &DataType, non_null: bool) -> String {
-    let tp: String = match ty {
+fn get_type(column: &ColumnDef, non_null: bool) -> String {
+    let name = column.name.value.to_lowercase();
+
+    if name == "id" || name.ends_with("_id") {
+        return "ID".to_string();
+    }
+
+    let tp: String = match &column.data_type {
         DataType::Custom(object_name, _) => {
             let name = object_name.0.first().unwrap_or_else(|| {
                 panic!("Empty object name: {object_name}");
@@ -43,11 +49,7 @@ fn get_type(ty: &DataType, non_null: bool) -> String {
                 panic!("Failed to convert object name to ident: {object_name}");
             };
 
-            if ident.value.to_lowercase() == "SERIAL".to_lowercase() {
-                "ID".into()
-            } else {
-                format!("crate::{}", ident.value.to_pascal_case())
-            }
+            format!("crate::{}", ident.value.to_pascal_case())
         }
         DataType::Varchar(_) => "String".into(),
         DataType::SmallInt(_) => "i16".into(),
@@ -61,7 +63,7 @@ fn get_type(ty: &DataType, non_null: bool) -> String {
             fields: _,
             precision: _,
         } => "Duration".into(),
-        _ => panic!("Unsupported date type: {ty:?}"),
+        _ => panic!("Unsupported date type: {:?}", column.data_type),
     };
 
     if non_null { tp } else { format!("Option<{tp}>") }

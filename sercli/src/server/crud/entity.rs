@@ -20,7 +20,7 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
             return format!(
                 r"CREATE TABLE IF NOT EXISTS {table_name}
 (
-   id SERIAL PRIMARY KEY
+   id BIGSERIAL PRIMARY KEY
 );"
             );
         }
@@ -40,7 +40,7 @@ impl<T: Reflected + for<'r> FromRow<'r, PgRow> + Unpin> Entity for T {
         format!(
             r"CREATE TABLE IF NOT EXISTS {table_name}
 (
-   id SERIAL PRIMARY KEY,
+   id BIGSERIAL PRIMARY KEY,
 {fields}
 );"
         )
@@ -153,7 +153,7 @@ mod test {
             Empty::create_table_query(),
             r"CREATE TABLE IF NOT EXISTS empties
 (
-   id SERIAL PRIMARY KEY
+   id BIGSERIAL PRIMARY KEY
 );"
         );
 
@@ -163,7 +163,7 @@ mod test {
             Cat::create_table_query(),
             r"CREATE TABLE IF NOT EXISTS cats
 (
-   id SERIAL PRIMARY KEY,
+   id BIGSERIAL PRIMARY KEY,
    age INTEGER NOT NULL,
    name VARCHAR(255) NOT NULL,
    weight REAL NOT NULL,

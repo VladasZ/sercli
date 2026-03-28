@@ -5,8 +5,8 @@ CREATE TYPE "wallet_type" AS ENUM (
 
 CREATE TABLE "wallets"
 (
-    "id"      serial PRIMARY KEY,
-    "user_id" integer     NOT NULL,
+    "id"      bigserial PRIMARY KEY,
+    "user_id" bigint      NOT NULL,
     "name"    varchar     NOT NULL,
     "amount"  decimal     NOT NULL,
     "tp"      wallet_type NOT NULL

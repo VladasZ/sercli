@@ -53,8 +53,7 @@ impl AccessToken {
             .get_claim("user_id")
             .ok_or_else(|| anyhow!("No user_id in claim"))?
             .as_i64()
-            .ok_or_else(|| anyhow!("Invalid value in user_id"))?
-            .try_into()?;
+            .ok_or_else(|| anyhow!("Invalid value in user_id"))?;
 
         let user_login: &str = claims
             .get_claim("user_login")
@@ -137,7 +136,7 @@ impl AccessToken {
         pool.execute(query(
             r"CREATE TABLE IF NOT EXISTS token_storage (
                    id SERIAL       PRIMARY KEY,
-              user_id INTEGER      NOT NULL,
+              user_id BIGINT       NOT NULL,
                 token VARCHAR(255) NOT NULL
 );",
         ))
@@ -190,6 +189,7 @@ mod test {
             email: SafeEmail().fake(),
         };
 
+        SomeUser::drop_table(&pool).await?;
         SomeUser::create_table(&pool).await?;
 
         let user = user.insert(&pool).await?;

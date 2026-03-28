@@ -31,6 +31,7 @@ mod test {
     async fn test_response_errors() -> Result<()> {
         static EMAIL: OnceLock<String> = OnceLock::new();
 
+        unsafe { std::env::set_var("SERVER_PORT", "8001") };
         let _handle = make_server().spawn("../model/migrations").await?;
 
         let error = NON_EXISTING_ENDPOINT
@@ -39,7 +40,7 @@ mod test {
 
         assert_eq!(
             format!("{error}"),
-            "Endpoint http://localhost:8000/non_existing_endpoint not found. 404."
+            "Endpoint http://localhost:8001/non_existing_endpoint not found. 404."
         );
 
         let datetime_str = "2025-03-29 14:30:45";
@@ -54,7 +55,7 @@ mod test {
             is_bot:   Some(false),
         };
 
-        let (token, _user) = REGISTER.send(peter.clone()).await?;
+        let (token, _user) = dbg!(REGISTER.send(peter.clone()).await)?;
         API.set_access_token(token);
 
         let error = REGISTER
@@ -68,7 +69,7 @@ mod test {
              value violates unique constraint \"users_email_key\""
         );
 
-        let users = GET_USERS.await?;
+        let users = dbg!(GET_USERS.await)?;
 
         let Some(user) = users.into_iter().find(|user| user.email == *EMAIL.get().unwrap()) else {
             panic!("Created user not found");
@@ -94,7 +95,7 @@ mod test {
             tp:      WalletType::Crypto,
         };
 
-        let wallet = CREATE_WALLET.send(wallet).await?;
+        let wallet = dbg!(CREATE_WALLET.send(wallet).await)?;
 
         assert!(wallet.id != 0 && wallet.user_id != 0);
 

@@ -23,5 +23,5 @@ pub async fn get_users(
     db: State<PgPool>,
     _: Json<()>,
 ) -> Result<Json<Vec<User>>, AppError> {
-    Ok(Json(User::get_all(&db).await?))
+    Ok(Json(dbg!(User::get_all(&db).await)?))
 }

@@ -20,6 +20,6 @@ mod reflected {
 )]
 pub struct Dog {
     pub id: ID,
-    pub user_id: i32,
+    pub user_id: ID,
     pub name: String,
 }

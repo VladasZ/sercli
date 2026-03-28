@@ -2,7 +2,7 @@ use sercli::client::{Request, RestAPI};
 
 use crate::{Wallet, entities::User};
 
-pub static API: RestAPI = RestAPI::new("http://localhost:8000");
+pub static API: RestAPI = RestAPI::new("http://localhost:8001");
 
 pub const REGISTER: Request<User, (String, User)> = API.request("register");
 pub const GET_USERS: Request<(), Vec<User>> = API.request("get_users");

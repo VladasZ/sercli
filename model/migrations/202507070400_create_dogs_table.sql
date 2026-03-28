@@ -1,6 +1,6 @@
 CREATE TABLE "dogs"
 (
-    "id"      serial PRIMARY KEY,
-    "user_id" integer NOT NULL,
+    "id"      bigint PRIMARY KEY,
+    "user_id" bigint NOT NULL,
     "name"    varchar NOT NULL
 );

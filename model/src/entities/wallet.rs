@@ -20,7 +20,7 @@ mod reflected {
 )]
 pub struct Wallet {
     pub id: ID,
-    pub user_id: i32,
+    pub user_id: ID,
     pub name: String,
     pub amount: Decimal,
     pub tp: crate::WalletType,
