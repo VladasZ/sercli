@@ -77,7 +77,7 @@ mod test {
 
     #[tokio::test]
     async fn key_value_storage() -> Result<()> {
-        let pool = prepare_db("../model/migrations").await?;
+        let pool = prepare_db().await?;
 
         DBStorage::del("sokol", &pool).await?;
         DBStorage::del("buff", &pool).await?;

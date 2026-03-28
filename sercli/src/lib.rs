@@ -6,7 +6,7 @@ mod user;
 
 pub use axum::{Json, extract::State, http::HeaderMap};
 pub use chrono::{Duration, NaiveDateTime as DateTime, Utc};
-pub use deps::utils::git_root;
+pub use deps::utils::{compose_path, git_root, migrations_path};
 pub use password::{check_password, hash_password};
 pub use server::{
     connection_string_from_compose,

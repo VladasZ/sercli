@@ -1,5 +1,4 @@
 use std::{
-    path::Path,
     process::{Command, Stdio},
     time::Duration,
 };
@@ -8,7 +7,10 @@ use anyhow::{Context, Result, bail};
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use tokio::time::sleep;
 
-use crate::{connection_string_from_compose, deps::generator::Generator};
+use crate::{
+    connection_string_from_compose,
+    deps::{generator::Generator, utils::{compose_path, migrations_path}},
+};
 
 async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     let mut pool: sqlx::Result<PgPool>;
@@ -30,11 +32,11 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
     }
 }
 
-pub fn generate_model(migrations: impl AsRef<Path>) -> Result<()> {
-    Generator::run(migrations.as_ref())
+pub fn generate_model() -> Result<()> {
+    Generator::run(&migrations_path()?)
 }
 
-pub async fn prepare_db(migrations: impl AsRef<Path>) -> Result<PgPool> {
+pub async fn prepare_db() -> Result<PgPool> {
     let conn = if let Ok(conn) = std::env::var("PG_CONNECTION_STRING") {
         conn
     } else {
@@ -47,9 +49,9 @@ pub async fn prepare_db(migrations: impl AsRef<Path>) -> Result<PgPool> {
 
     let pool = open_pool_when_available(&conn).await?;
 
-    let migrations = migrations.as_ref();
+    let migrations = migrations_path()?;
 
-    let migrator = Migrator::new(migrations)
+    let migrator = Migrator::new(migrations.as_path())
         .await
         .inspect_err(|err| {
             dbg!(err);
@@ -70,6 +72,7 @@ pub fn stop_containers() -> Result<()> {
 fn compose_up() -> Result<()> {
     let status = Command::new("docker")
         .arg("compose")
+        .args(["-f", &compose_path()?.to_string_lossy().into_owned()])
         .arg("up")
         .arg("-d")
         .stdout(Stdio::inherit())
@@ -87,7 +90,9 @@ fn compose_up() -> Result<()> {
 
 fn compose_down() -> Result<()> {
     let status = Command::new("docker")
-        .args(["compose", "down", "--volumes", "--remove-orphans"])
+        .arg("compose")
+        .args(["-f", &compose_path()?.to_string_lossy().into_owned()])
+        .args(["down", "--volumes", "--remove-orphans"])
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()?;

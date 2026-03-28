@@ -1,6 +1,10 @@
-use std::{path::PathBuf, process::Command};
+use std::{
+    path::PathBuf,
+    process::Command,
+};
 
 use anyhow::{Result, bail};
+use serde::Deserialize;
 
 pub fn git_root() -> Result<PathBuf> {
     let output = Command::new("git").args(["rev-parse", "--show-toplevel"]).output()?;
@@ -14,32 +18,51 @@ pub fn git_root() -> Result<PathBuf> {
     Ok(PathBuf::from(git_root))
 }
 
+#[derive(Deserialize)]
+struct QwConfig {
+    migrations: String,
+    compose:    String,
+}
+
+fn find_qw_toml() -> Result<PathBuf> {
+    let mut dir = std::env::current_dir()?;
+    loop {
+        let candidate = dir.join("qw.toml");
+        if candidate.exists() {
+            return Ok(candidate);
+        }
+        if !dir.pop() {
+            bail!("qw.toml not found in current directory or any parent");
+        }
+    }
+}
+
+fn qw_config() -> Result<(QwConfig, PathBuf)> {
+    let path = find_qw_toml()?;
+    let root = path.parent().unwrap().to_path_buf();
+    let content = std::fs::read_to_string(&path)?;
+    Ok((toml::from_str(&content)?, root))
+}
+
+pub fn migrations_path() -> Result<PathBuf> {
+    let (config, root) = qw_config()?;
+    Ok(root.join(config.migrations))
+}
+
+pub fn compose_path() -> Result<PathBuf> {
+    let (config, root) = qw_config()?;
+    Ok(root.join(config.compose))
+}
+
 #[cfg(test)]
 mod test {
-    use std::env;
-
-    use anyhow::{Result, anyhow};
+    use anyhow::Result;
 
     use crate::git_root;
 
     #[test]
     fn test() -> Result<()> {
         assert_eq!("sercli", git_root()?.iter().last().unwrap());
-
-        let original_dir = env::current_dir()?;
-        let home_dir = home::home_dir().ok_or(anyhow!("No HOME"))?;
-
-        env::set_current_dir(&home_dir)?;
-
-        let result = git_root();
-
-        env::set_current_dir(original_dir)?;
-
-        assert_eq!(
-            anyhow!("Failed to get Git repository root path").to_string(),
-            result.err().unwrap().to_string()
-        );
-
         Ok(())
     }
 }

@@ -9,7 +9,7 @@ use crate::{Dog, User, Wallet};
 #[ignore]
 #[tokio::test]
 async fn generate_test_data() -> Result<()> {
-    let pool = prepare_db("model/migrations").await?;
+    let pool = prepare_db().await?;
 
     dbg!(User::get_all(&pool).await?);
 

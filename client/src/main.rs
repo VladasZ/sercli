@@ -4,7 +4,7 @@ use server::make_server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let handle = make_server().spawn("model/migrations").await?;
+    let handle = make_server().spawn().await?;
 
     dbg!(&handle);
 
@@ -32,7 +32,7 @@ mod test {
         static EMAIL: OnceLock<String> = OnceLock::new();
 
         unsafe { std::env::set_var("SERVER_PORT", "8001") };
-        let _handle = make_server().spawn("../model/migrations").await?;
+        let _handle = make_server().spawn().await?;
 
         let error = NON_EXISTING_ENDPOINT
             .await

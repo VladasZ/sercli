@@ -3,7 +3,7 @@ use model::{User, Wallet};
 use sercli::{Crud, db::prepare_db, reflected::RandomReflected};
 
 async fn setup() -> Result<(sqlx::PgPool, User, Wallet, Wallet)> {
-    let pool = prepare_db("migrations").await?;
+    let pool = prepare_db().await?;
 
     let mut user = User::random();
     user = user.insert(&pool).await?;

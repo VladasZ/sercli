@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 use serde_yaml::from_str;
 
-use crate::deps::utils::git_root;
+use crate::deps::utils::compose_path;
 
 #[derive(Debug, Deserialize)]
 struct ComposeFile {
@@ -33,7 +33,7 @@ struct Environment {
 }
 
 pub fn connection_string_from_compose() -> Result<String> {
-    let yaml = read_to_string(git_root()?.join("docker-compose.yml"))?;
+    let yaml = read_to_string(compose_path()?)?;
 
     let compose: ComposeFile = from_str(&yaml).context("Invalid docker-compose.yml")?;
 
