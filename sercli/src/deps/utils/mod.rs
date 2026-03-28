@@ -1,7 +1,4 @@
-use std::{
-    path::PathBuf,
-    process::Command,
-};
+use std::{path::PathBuf, process::Command};
 
 use anyhow::{Result, bail};
 use serde::Deserialize;

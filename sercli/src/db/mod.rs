@@ -9,7 +9,10 @@ use tokio::time::sleep;
 
 use crate::{
     connection_string_from_compose,
-    deps::{generator::Generator, utils::{compose_path, migrations_path}},
+    deps::{
+        generator::Generator,
+        utils::{compose_path, migrations_path},
+    },
 };
 
 async fn open_pool_when_available(url: &str) -> Result<PgPool> {
@@ -30,6 +33,40 @@ async fn open_pool_when_available(url: &str) -> Result<PgPool> {
             bail!("Connection to PG pool reached retry limit of 100. Last result: {pool:?}");
         }
     }
+}
+
+async fn reset_if_tables_missing(pool: &PgPool) -> Result<()> {
+    let migration_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = \
+         '_sqlx_migrations'",
+    )
+    .fetch_one(pool)
+    .await?;
+
+    if migration_count == 0 {
+        return Ok(());
+    }
+
+    let applied: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM _sqlx_migrations WHERE success = true")
+        .fetch_one(pool)
+        .await?;
+
+    if applied == 0 {
+        return Ok(());
+    }
+
+    let user_tables: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name != \
+         '_sqlx_migrations'",
+    )
+    .fetch_one(pool)
+    .await?;
+
+    if user_tables == 0 {
+        sqlx::query("DELETE FROM _sqlx_migrations").execute(pool).await?;
+    }
+
+    Ok(())
 }
 
 pub fn generate_model() -> Result<()> {
@@ -59,6 +96,8 @@ pub async fn prepare_db() -> Result<PgPool> {
         })
         .with_context(|| format!("Creating migrator with path: {}", migrations.display()))?;
 
+    reset_if_tables_missing(&pool).await?;
+
     migrator.run(&pool).await?;
 
     Ok(pool)
@@ -72,7 +111,7 @@ pub fn stop_containers() -> Result<()> {
 fn compose_up() -> Result<()> {
     let status = Command::new("docker")
         .arg("compose")
-        .args(["-f", &compose_path()?.to_string_lossy().into_owned()])
+        .args(["-f", &compose_path()?.to_string_lossy()])
         .arg("up")
         .arg("-d")
         .stdout(Stdio::inherit())
@@ -91,7 +130,7 @@ fn compose_up() -> Result<()> {
 fn compose_down() -> Result<()> {
     let status = Command::new("docker")
         .arg("compose")
-        .args(["-f", &compose_path()?.to_string_lossy().into_owned()])
+        .args(["-f", &compose_path()?.to_string_lossy()])
         .args(["down", "--volumes", "--remove-orphans"])
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())

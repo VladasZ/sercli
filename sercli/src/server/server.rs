@@ -104,9 +104,7 @@ impl Server {
 
     fn spawn_internal(self, started: oneshot::Sender<ServerHandle>) {
         spawn(async {
-            self.start_internal(started.into())
-                .await
-                .expect("Failed to spawn server");
+            self.start_internal(started.into()).await.expect("Failed to spawn server");
         });
     }
 

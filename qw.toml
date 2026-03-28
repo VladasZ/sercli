@@ -1,2 +1,2 @@
-migrations = "model/migrations"
 compose = "docker-compose.yml"
+migrations = "model/migrations"
