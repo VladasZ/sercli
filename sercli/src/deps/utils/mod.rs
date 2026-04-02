@@ -19,6 +19,7 @@ pub fn git_root() -> Result<PathBuf> {
 struct QwConfig {
     migrations: String,
     compose:    String,
+    target_dir: Option<String>,
 }
 
 fn find_qw_toml() -> Result<PathBuf> {
@@ -49,6 +50,11 @@ pub fn migrations_path() -> Result<PathBuf> {
 pub fn compose_path() -> Result<PathBuf> {
     let (config, root) = qw_config()?;
     Ok(root.join(config.compose))
+}
+
+pub fn target_dir() -> Result<Option<String>> {
+    let (config, _) = qw_config()?;
+    Ok(config.target_dir)
 }
 
 #[cfg(test)]

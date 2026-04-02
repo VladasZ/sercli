@@ -11,7 +11,7 @@ use crate::{
     connection_string_from_compose,
     deps::{
         generator::Generator,
-        utils::{compose_path, migrations_path},
+        utils::{compose_path, migrations_path, target_dir},
     },
 };
 
@@ -109,14 +109,19 @@ pub fn stop_containers() -> Result<()> {
 }
 
 fn compose_up() -> Result<()> {
-    let status = Command::new("docker")
-        .arg("compose")
+    let mut cmd = Command::new("docker");
+    cmd.arg("compose")
         .args(["-f", &compose_path()?.to_string_lossy()])
         .arg("up")
         .arg("-d")
         .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status()?;
+        .stderr(Stdio::inherit());
+
+    if let Some(dir) = target_dir()? {
+        cmd.env("TARGET_DIR", dir);
+    }
+
+    let status = cmd.status()?;
 
     if status.success() {
         println!("docker-compose up completed successfully.");
