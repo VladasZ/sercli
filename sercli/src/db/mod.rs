@@ -82,7 +82,7 @@ pub async fn prepare_db() -> Result<PgPool> {
         connection_string_from_compose()?
     };
 
-    dbg!(&conn);
+    println!("Connecting to {}", hide_password(&conn));
 
     let pool = open_pool_when_available(&conn).await?;
 
@@ -101,6 +101,36 @@ pub async fn prepare_db() -> Result<PgPool> {
     migrator.run(&pool).await?;
 
     Ok(pool)
+}
+
+/// The connection string carries the db password, and `prepare_db` runs on
+/// every boot, so printing it whole wrote the password into the logs of every
+/// service built on this crate. The host and the db name are the part worth
+/// seeing, so only the password is replaced.
+///
+/// Written by hand rather than with a url crate because the string is not
+/// always a valid url: `connection_string_from_compose` builds it from the
+/// compose file, and a malformed one still has to print something instead of
+/// failing the boot.
+fn hide_password(conn: &str) -> String {
+    let Some((scheme, rest)) = conn.split_once("://") else {
+        return conn.to_string();
+    };
+
+    // The password ends at the last '@' of the authority, since it may itself
+    // contain one. Everything from the first '/' on is the path.
+    let authority_len = rest.find('/').unwrap_or(rest.len());
+    let (authority, path) = rest.split_at(authority_len);
+
+    let Some((userinfo, host)) = authority.rsplit_once('@') else {
+        return conn.to_string();
+    };
+
+    let Some((user, _password)) = userinfo.split_once(':') else {
+        return conn.to_string();
+    };
+
+    format!("{scheme}://{user}:***@{host}{path}")
 }
 
 pub fn stop_containers() -> Result<()> {
@@ -148,4 +178,36 @@ fn compose_down() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hide_password;
+
+    /// The regression: a real connection string used to be printed whole on
+    /// every boot. Only the password goes, the host and db stay readable.
+    #[test]
+    fn test_password_is_hidden() {
+        assert_eq!(
+            hide_password("postgresql://petuh:s3cret@pg-rw:5432/petuh_db"),
+            "postgresql://petuh:***@pg-rw:5432/petuh_db"
+        );
+        assert_eq!(
+            hide_password("postgres://user:p@ss@localhost:5432/db"),
+            "postgres://user:***@localhost:5432/db"
+        );
+    }
+
+    /// A string with no password to hide comes back untouched. It must never
+    /// fail the boot, so anything unparseable is printed as it is.
+    #[test]
+    fn test_strings_without_a_password_pass_through() {
+        for conn in [
+            "postgresql://pg-rw:5432/petuh_db",
+            "postgresql://petuh@pg-rw:5432/petuh_db",
+            "not a url at all",
+        ] {
+            assert_eq!(hide_password(conn), conn);
+        }
+    }
 }
